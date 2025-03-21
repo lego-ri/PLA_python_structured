@@ -1,19 +1,40 @@
-""" 
-    Check if the specified initial composition has a corresponding number of elements Nx.
-    If so, return that Nx.
-    Otherwise find the closest possivle initial composition which has a corresponding Nx and return these.
-"""
-
 import numpy as np
 from measure_time import measure_time
 
 @measure_time
 def find_Nx(D0_composition, Nx_pars, process_pars):
+    """ 
+    Check if the specified initial composition has a corresponding number of elements Nx.
+    If so, return that Nx.
+    Otherwise find the closest possivle initial composition which has a corresponding Nx and return these.
+    
+    Parameters:
+        D0_composition (list or np.array): The initial composition fractions defined by the user.
+        Nx_pars (array): 
+            min_Nx - minimum number of chains (species) to be considered for the model.
+            max_Nx - maximum number of chains (species) to be considered for the model.
+            max_difference_RD_dec_round - maximal difference between the actuall number of chains and the rounded number of chains 
+                                            as per the R/D equilibrium from the detministic model main_process.
+            eps_fraction - margin for finding close fractions to the defined inlet composition.
+        
+        
+        process_pars (array): 
+            D_conc - concentration of dormant chains from the deterministic model main_process
+            R_conc - concentration of active chains from the deterministic model main_process
+            ga0    - concentration of terminated chains from the deterministic model main_process
+
+    Returns:
+        D0_composition (array): The initial composition fractions found by the algorithm find_Nx if the user defined is not viable.
+        Nx (int): The total number of chains (including 1 terminated chain to start up the simulation).
+        R_round (int): The number of active chains.
+        D_round (int): The number of active chains.
+    """
 
     #* Define the parameters for the optimal Nx search
-    min_Nx = Nx_pars[0]                        # minimal Nx
-    max_Nx = Nx_pars[1]                        # maximal Nx    
-    max_difference_RD_dec_round = Nx_pars[2]   # maximal difference between rounded and non-rounded D,R
+    min_Nx = Nx_pars[0]                        # Minimal Nx
+    max_Nx = Nx_pars[1]                        # Maximal Nx    
+    max_difference_RD_dec_round = Nx_pars[2]   # Maximal difference between rounded and non-rounded D,R
+    eps_fraction = Nx_pars[3]                  # Margin for finding close fractions to the defined inlet composition
     
     #* Unpack the data from the deterministic model 
     D_conc = process_pars[0]                     # Dormant concentration, mol/m3
@@ -79,7 +100,6 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
         Nx_viable_no_G = Nx_viable - 1  # Substract 1 terminated chain to get the total number of D and R initial
         Inlet_comp_results = {}         # Define a dictionary to save the initial compositions and the Nx they belong to
         Inlet_comp_sorted_results = {}  # Define a dictionary for sorted results with the closest matches at the top
-        eps_fraction = 0.001            # Margin for finding close fractions to the defined inlet comp
         
         #* Step 1:
         # Iterate over possible Nx values to find close initial compositions
@@ -142,10 +162,11 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
             print(f"Overall Best Match Found:")
             print(f"Nx = {Nx}")
             print(f"D_round is: {D_round}, R_round is: {R_round}, G is set to 1")
-            print("Composition:", D0_composition)
-            print(f"Total Deviation from Target: {best_error}")
+            print(f"Composition:, {np.array(D0_composition).tolist()}")
+            print(f"Total Deviation from Target (Sum of squares): {best_error}")
         else:
-            print("No valid compositions found.")
+            print("No valid inlet compositions found within the target range from the user defined composition -> code terminated.")
             exit()\
                 
     return D0_composition, Nx, D_round, R_round
+

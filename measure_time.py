@@ -1,10 +1,6 @@
 """ 
     Decorator used to measure the time a function takes to be executed.
 """
-"""
-   Used in:
-   plot_results.py - measure time taken to plot
-"""
 
 #* Import necessary libraries 
 import time
