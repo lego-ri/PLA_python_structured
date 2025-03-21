@@ -23,8 +23,11 @@ import matplotlib.pyplot as plt         # For plotting in post processing
 from scipy.signal import savgol_filter  # Smoothen the data for plotting
 from find_Nx import find_Nx
 from build_matrixes_forMC import build_matrixes_forMC
+from monte_carlo_algorithm import monte_carlo_algorithm
 
 total_time = process_time()      # Start the timer to measure the total run time of the file
+
+print("Program main_MC_branched running...")
 
 #* Load variables evaluated by the main_process 
 data = np.load('deterministic_results_for_MC.npy')  # Load the data from the main_process 
@@ -83,51 +86,34 @@ eps_fraction = 1e-3                  # Margin for finding close fractions to the
 
 # Pack pars for Nx search
 Nx_pars = [min_Nx, max_Nx, max_difference_RD_dec_round, eps_fraction] 
-process_pars = [D_conc, R_conc, ga0]
+process_pars = [D_conc, R_conc, ga0, t]
 
 # Find the optimal Nx
 D0_composition, Nx, D_round, R_round = find_Nx(D0_composition, Nx_pars, process_pars)
 
 #* Build matrixes for D and R chains for the MC simulation
-D, R, G = build_matrixes_forMC(D0_composition, Nx, R_round, max_branches)
-
-#* Convert deterministic kinetic rates to stochastic (MC)
-V = Nx / (N_A*(D_conc + R_conc + ga0[-1]))        # Simulated volume, m3 #! terminated chains incl.
-k_p_MC   = k_p  / (V*N_A)        # Propagation, 1/s
-k_d_MC   = k_d                   # Depropagation, 1/s
-k_s_MC   = k_s  / (V*N_A)        # Chain transfer, 1/s
-k_te_MC  = k_te / (V*N_A)        # Transesterification, 1/s
-k_de_MC  = k_de                  # Scission, 1/s
-
-#* Convert specie concetrations to number values for MC
-M_MC    = M  * N_A * V                          # Number of monomer molecules, -
-C_MC    = C  * N_A * V                          # Number of catalyst molecules, -
-A_MC    = A  * N_A * V                          # Number of acid molecules, -
-
-#* Initiate vectors for output
-reac_num  = 12              # Number of elementary reactions considered, used in random selection
-Rates_out = np.zeros(reac_num)  # The reaction rates
-R_out     = np.zeros(1)         # The active chains (radicals)
-D_out     = np.zeros(1)         # The dormant chains
-G_out     = np.zeros(1)         # The terminated chains
-Mn_out    = np.zeros(1)         # The number-average molecular weight of polymer
-Mw_out    = np.zeros(1)         # The weight-average molecular weight of polymer
-t_out     = np.zeros(1)         # The reaction time in simulation, s
-out_idx   = 0                   # With fq for registering the data from the model in the while loop 
-current_time_counter   = 1                   # For current simulation duration measuring
-suma_n_tot = np.zeros(1)        # The total number of polymer chains
-
-#* Pre-process concentration profiles (cur~current conc.) from the ODE model
-C_cur = C_MC[-1]                                        # Catalyst concentration considered constant 
-A_cur = A_MC[-1]                                        # Acid concentration considered constant 
-M_fit = interpolate.interp1d(t, M_MC, kind='linear')    # Fit monomer profile as piecewise linear, later used in the main loop 
+D, R, G, total_num_D_mol = build_matrixes_forMC(D0_composition, Nx, R_round, max_branches)
 
 #* Main MC simulation loop 
-#? line 273 in the unstructured model
+# Pack parameters for the MC simulation
+mc_pars = [Nx, N_A, M, C, A, R, D, G, total_num_D_mol]
+
+# Run the MC simulation
+t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G = monte_carlo_algorithm(mc_pars, process_pars, ModelPars)
+
+#* Post processing
+# Pack MC results for plotting
+MC_output = [t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, G]
+plot_pars = [t, Mn_ODE, Mw_ODE, MW]
 
 
 
-###########################################################################################
-###########################################################################################
+
+
+
+
+
+########################################################################3
 total_time = process_time() - total_time
-print(f"Total processor time taken to run the whole main_MC_branched: {total_time} seconds")
+print(f"Total processor time taken to run the whole main_MC_branched program: {total_time} seconds")
+

@@ -16,6 +16,7 @@ def build_matrixes_forMC(D0_composition, Nx, R_round, max_branches):
         D - matrix representing the dormant chains, each column is one molecule and each row is one branch in that molecule.
         R - matrix representing the active chains, each column is one molecule and each row is one branch in that molecule.
         G - array representing the terminated chains, each number is a molecule.
+        total_num_D_mol - total  number of molecules at the beginning of the simulation, excluding 1 terminated chain
     """
 
     print("Building matrixes for MC simulation...")
@@ -58,4 +59,4 @@ def build_matrixes_forMC(D0_composition, Nx, R_round, max_branches):
     print(f"R size: {R.size}, shape: {R.shape}")
     print(f"G size: {G.size}, shape: {G.shape}")
 
-    return D, R, G
+    return D, R, G, total_num_D_mol
