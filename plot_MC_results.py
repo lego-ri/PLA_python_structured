@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt         # For plotting in post processing
 from scipy.signal import savgol_filter  # Smoothen the data for plotting
 import numpy as np
+from measure_time import measure_time
 
-
-def plot_MC_reults(MC_output, plot_pars):
+@measure_time
+def plot_MC_results(MC_output, plot_pars):
     
     
     # Unpack MC_output parameters

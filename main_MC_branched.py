@@ -24,6 +24,7 @@ from scipy.signal import savgol_filter  # Smoothen the data for plotting
 from find_Nx import find_Nx
 from build_matrixes_forMC import build_matrixes_forMC
 from monte_carlo_algorithm import monte_carlo_algorithm
+from plot_MC_results import plot_MC_results
 
 total_time = process_time()      # Start the timer to measure the total run time of the file
 
@@ -64,7 +65,7 @@ D_conc = mu0[-1]    # concentration of dormant chains
 #TODO: Define the initial composition of cocatalysts:
 max_branches = 3 # Number of branches of the most branched cocatalyst molecule #!  Define the number of max branches and the inlet composition
 D0_composition = np.zeros(max_branches)                      
-D0_composition[0]      = 0#0.15        #0.2                   # Fraction of chains (branches) in linear cocatalysts
+D0_composition[0]      = 1#0.15        #0.2                   # Fraction of chains (branches) in linear cocatalysts
 D0_composition[1]      = 0#0.33         # 0.3                 # Fraction of chains in cocatalysts with 2 branches
 # D0_composition[2]      = 0.05                               # Input something if we have 4-branched cocatalysts etc..
 D0_composition[-1]      = 1 - np.sum(D0_composition[:-1])     # Fraction of chains in cocatalysts with x branches
@@ -106,7 +107,8 @@ t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sum
 MC_output = [t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, G]
 plot_pars = [t, Mn_ODE, Mw_ODE, MW]
 
-
+# Plotting
+plot = plot_MC_results(MC_output, plot_pars)
 
 
 

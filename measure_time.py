@@ -10,7 +10,7 @@ def measure_time(func):
         Decorator for measuring the time taken to execute a function
     """
     def measure_and_write_time(*args, **kwargs):     # args and kwargs to enable handling of any number of arguments
-        print(f"\n Subroutine {func.__name__} starting...")
+        print(f"\nSubroutine {func.__name__} starting...")
         start = time.time()                          # Start measuring the total time
         start_process = time.process_time()          # Start measuring the time used by the processor
         result = func(*args, **kwargs)               # The original wrapped function is called and the results stored
