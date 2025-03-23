@@ -22,7 +22,7 @@ from measure_time import measure_time
 
 #* The main function that plots the results and saves the data for MC simulation
 @measure_time
-def plot_results(solution, pars):
+def plot_deterministic_results(solution, pars):
     """ 
         Plots the results and saves them to .csv and .npy files
     """
@@ -208,7 +208,7 @@ def plot_results(solution, pars):
         np.save(filename, data)
 
     # Save the data to a .npy file
-    save_to_npy('deterministic_results_for_MC.npy')
+    save_to_npy('deterministic_results_for_MC_branched.npy')
     
     # Save the data to a .csv file
-    save_to_csv('deterministic_results_for_MC.csv')
+    # save_to_csv('deterministic_results_for_MC.csv')

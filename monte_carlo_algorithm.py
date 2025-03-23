@@ -97,7 +97,6 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     start_time = time()     # To measure the time taken by the simulation
     time_sim = 0                    # Reaction time in simulation, s (not time taken to simulate)
     Rate = np.zeros(reac_num)       # Initiate the vector of reaction rate
-    print("Monte Carlo simulation in progress...")
 
     while time_sim <= time_end:        
         # Get concentrations of non-polymeric (monomer) species from process ODE simulation
