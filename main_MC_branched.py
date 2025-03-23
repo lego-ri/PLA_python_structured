@@ -9,7 +9,6 @@ Batch ring-opening polymerization of L,L-lactide simulated using
 model_pars.py: contains parameters of batch L,L-lactide ROP
 'deterministic_results_for_MC.npy': data from ODE model, which is used for the MC model
 """
-# TODO: clean up the code
 
 #* Import necessary modules and libraries
 import itertools                        # for handling data in arrays (creationg subarrays etc.)
@@ -17,10 +16,6 @@ import sys                              # for exitting the code if something goe
 from time import process_time           # To measure the time taken by the simulation
 from model_pars import ModelPars        # Parameters of batch L,L-lactide ROP (Ring opening polymerization)
 import numpy as np                      # For mathematical operations and data handling (e.g. importing and exporting)
-from scipy import interpolate           # To fit the monomer profile as piecewise linear
-from select_reaction import SelReac     # For semi-random chosing of the reaction to occure
-import matplotlib.pyplot as plt         # For plotting in post processing
-from scipy.signal import savgol_filter  # Smoothen the data for plotting
 from find_Nx import find_Nx
 from build_matrixes_forMC import build_matrixes_forMC
 from monte_carlo_algorithm import monte_carlo_algorithm
@@ -42,22 +37,9 @@ la0 = data['la0']                                   # 0th moment of active chain
 mu0 = data['mu0']                                   # 0th moment of dormant chains - concentration, mol/m3
 ga0 = data['ga0']                                   # 0th moment of terminated chains - concentration, mol/m3
 
-#* Parameters of the Monte Carlo simulation
-small_number = 1e-6      # Small number for numerical stability
-N_A = 6.022140858e23     # Avogadro number, 1/mol
-MW = ModelPars.MW        # Molecular weight of lactoyl (monomer) group, kg/mol
-time_end = t[-1]         # Simulation time, s
-# D0 = ModelPars.D0        # Initial concentration of cocatalyst (i.e. initial dormant chains), mol/m3
-# k_a1 = ModelPars.k_a1    # Activation rate coefficient, m3/mol/s
-# k_a2 = ModelPars.k_a2    # Deactivation rate coefficient, m3/mol/s
-k_p = ModelPars.k_p      # Propagation rate coefficient, m3/mol/s
-k_d = ModelPars.k_d      # Depropagation rate coefficient, 1/s
-k_s = ModelPars.k_s      # Chain-transfer rate coefficient m3/mol/s
-k_te = ModelPars.k_te    # Intermolecular transesterification rate coefficient, m3/mol/s
-k_de = ModelPars.k_de    # Nonradical random chain scission rate coefficient, 1/s
-fq = 10                  # Fequency of data output (every fq in seconds) 
-
-# "Instantenious equilibrium R vs D"
+#* "Instantenious equilibrium R vs D"
+# The concentration of dormant and active chains becomes constant very quickly,
+# thus can be assumed constant from the beggining throughout the MC simulation.
 R_conc = la0[-1]    # concentration of active chains
 D_conc = mu0[-1]    # concentration of dormant chains
 
@@ -97,7 +79,7 @@ D, R, G, total_num_D_mol = build_matrixes_forMC(D0_composition, Nx, R_round, max
 
 #* Main MC simulation loop 
 # Pack parameters for the MC simulation
-mc_pars = [Nx, N_A, M, C, A, R, D, G, total_num_D_mol]
+mc_pars = [Nx, M, C, A, R, D, G, total_num_D_mol]
 
 # Run the MC simulation
 t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G = monte_carlo_algorithm(mc_pars, process_pars, ModelPars)
@@ -105,12 +87,10 @@ t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sum
 #* Post processing
 # Pack MC results for plotting
 MC_output = [t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, G]
-plot_pars = [t, Mn_ODE, Mw_ODE, MW]
+plot_pars = [t, Mn_ODE, Mw_ODE]
 
 # Plotting
 plot = plot_MC_results(MC_output, plot_pars)
-
-
 
 
 

@@ -1,7 +1,8 @@
+import numpy as np                      # Numerical library in Python
 import matplotlib.pyplot as plt         # For plotting in post processing
 from scipy.signal import savgol_filter  # Smoothen the data for plotting
-import numpy as np
-from measure_time import measure_time
+from measure_time import measure_time   # Handle that measures time a function takes to execute
+from model_pars import ModelPars        # Model parameters
 
 @measure_time
 def plot_MC_results(MC_output, plot_pars):
@@ -23,7 +24,8 @@ def plot_MC_results(MC_output, plot_pars):
     t = plot_pars[0]
     Mn_ODE = plot_pars[1]
     Mw_ODE = plot_pars[2]
-    MW = plot_pars[3]
+    
+    MW = ModelPars.MW        # Molecular weight of lactoyl (monomer) group, kg/mol
     
     # Other parameters for plotting
     small_number = 1e-6      # Small number for numerical stability

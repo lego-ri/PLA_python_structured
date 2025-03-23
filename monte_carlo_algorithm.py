@@ -2,6 +2,8 @@ import numpy as np
 from measure_time import measure_time
 from scipy import interpolate           # To fit the monomer profile as piecewise linear
 from time import time
+from select_reaction import SelReac     # For semi-random chosing of the reaction to occure (is not used in the end as an inbuilt function in Python is used isntead)
+
 
 
 @measure_time
@@ -35,14 +37,13 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     
     #* Unpack parameters
     Nx = mc_pars[0]
-    N_A = mc_pars[1]
-    M = mc_pars[2]
-    C = mc_pars[3]
-    A = mc_pars[4]
-    R = mc_pars[5]
-    D = mc_pars[6]
-    G = mc_pars[7]
-    total_num_D_mol = mc_pars[8]
+    M = mc_pars[1]
+    C = mc_pars[2]
+    A = mc_pars[3]
+    R = mc_pars[4]
+    D = mc_pars[5]
+    G = mc_pars[6]
+    total_num_D_mol = mc_pars[7]
     
     D_conc = process_pars[0]
     R_conc = process_pars[1]
@@ -56,13 +57,11 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     k_de = ModelPars.k_de    
        
     #* Monte carlo parameters   
+    N_A = 6.022140858e23     # Avogadro number, 1/mol
     V = Nx / (N_A*(D_conc + R_conc + ga0[-1]))        # Simulated volume, m3 #! terminated chains incl.
     time_end = t[-1]
     MW = ModelPars.MW        # Molecular weight of lactoyl (monomer) group, kg/mol
     fq = 10                 # frequency for data logging
-    # D0 = ModelPars.D0        # Initial concentration of cocatalyst (i.e. initial dormant chains), mol/m3
-    # k_a1 = ModelPars.k_a1    # Activation rate coefficient, m3/mol/s
-    # k_a2 = ModelPars.k_a2    # Deactivation rate coefficient, m3/mol/s
        
     #* Convert deterministic kinetic rates to stochastic (MC)
     k_p_MC   = k_p  / (V*N_A)        # Propagation, 1/s
@@ -90,8 +89,8 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     suma_n_tot = np.zeros(1)        # The total number of polymer chains
 
     #* Pre-process concentration profiles (cur~current conc.) from the ODE model
-    C_cur = C_MC[-1]                                        # Catalyst concentration considered constant 
-    A_cur = A_MC[-1]                                        # Acid concentration considered constant 
+    # C_cur = C_MC[-1]                                        # Catalyst concentration considered constant 
+    # A_cur = A_MC[-1]                                        # Acid concentration considered constant 
     M_fit = interpolate.interp1d(t, M_MC, kind='linear')    # Fit monomer profile as piecewise linear, later used in the main loop 
 
     #* Main simulation loop 
@@ -223,8 +222,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     print("Passive transesterification (R+D) chosen, but no dormant chain with length>1 available.\nsimulation ongoing...")
                     continue
 
-            case 8:  # "Active" transesterification (R+R)
-                #? inter/intra transesterification - currently just inter (like in theb paper)
+            case 8:  # "Active" inter-transesterification (R+R)
                 R_idx_1 = np.argwhere(R > 1)
                 if R_idx_1.size > 0:
                     R_lengths = R[R_idx_1[:,0], R_idx_1[:,1]] # Lengths of active chains
@@ -241,8 +239,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     print("Active transesterification (R+R) chosen, but no active chains with length>1 available\nsimulation ongoing...")
                     continue
 
-            case 9:  # "Passive" transesterification (R+R)
-                #? inter/intra transesterification - currently just inter (like in theb paper)
+            case 9:  # "Passive" inter-transesterification (R+R)
                 R_indexes_1 = np.argwhere(R > 1)
                 if R_indexes_1.size > 0:
                     R_idx_random_1 = R_indexes_1[np.random.choice(R_indexes_1.shape[0])] # Select first active chain based on probability
