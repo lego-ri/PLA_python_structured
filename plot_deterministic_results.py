@@ -35,11 +35,11 @@ def plot_deterministic_results(solution, pars):
     C = y[1]     # Catalyst concentration, mol/m3
     A = y[2]     # Acid concentration, mol/m3
     la0 = y[3]   # 0th moment of active chains, mol/m3
-    la1 = y[4]   # 1st moment of active chains, 
-    la2 = y[5]   # 2nd moment of active chains, 
+    la1 = y[4]   # 1st moment of active chains, #!!!!!!
+    la2 = y[5]   # 2nd moment of active chains, #!!!!!!
     mu0 = y[6]   # 0th moment of dormant chains, mol/m3
-    mu1 = y[7]   # 1st moment of dormant chains,
-    mu2 = y[8]   # 2nd moment of dormant chains,
+    mu1 = y[7]   # 1st moment of dormant chains,#!!!!!!
+    mu2 = y[8]   # 2nd moment of dormant chains,#!!!!!!
     ga0 = y[9]   # 0th moment of terminated chains, mol/m3
     ga1 = y[10]  # 1st moment of terminated chains
     ga2 = y[11]  # 2nd moment of terminated chains
@@ -50,10 +50,10 @@ def plot_deterministic_results(solution, pars):
     conv = (pars.M0 - M) / pars.M0 * 100
 
     #* Number-average molecular weight of polymer
-    Mn_ODE = pars.MW * (la1 + mu1 + ga1) / (la0 + mu0 + ga0)
+    Mn_ODE = pars.MW * (la1 + mu1 + ga1) / (la0 + mu0 + ga0)  
 
     #* Weight-average molecular weight of polymer
-    Mw_ODE = pars.MW * (la2 + mu2 + ga2) / (la1 + mu1 + ga1)
+    Mw_ODE = pars.MW * (la2 + mu2 + ga2) / (la1 + mu1 + ga1) 
 
     #* Print final conversion, Mw, and PDI
     print(f'Conversion = {conv[-1]:.2f} [%]')           # [-1] is the last element of the array,

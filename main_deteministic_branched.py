@@ -22,7 +22,7 @@ from measure_time import measure_time       # Decorator for time measurements
 
 
 #* Apply initial conditions
-#? pro rozsireny zmenit 0. momenty?? chaiins = x*molekules
+#TODO: pro rozsireny zmenit momenty
 small_number = 1e-7    # Define the small_number
 M0 = ModelPars.M0      # Monomer concentration
 C0 = ModelPars.C0      # Catalyst concentration

@@ -45,12 +45,11 @@ D_conc = mu0[-1]    # concentration of dormant chains
 
 #! #######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
-max_branches = 3 # Number of branches of the most branched cocatalyst molecule #!  Define the number of max branches and the inlet composition
+max_branches = 3                                              # Number of branches of the most branched cocatalyst molecule
 D0_composition = np.zeros(max_branches)                      
-D0_composition[0]      = 0#0.15        #0.2                   # Fraction of chains (branches) in linear cocatalysts
+D0_composition[0]      = 1#0.15        #0.2                   # Fraction of chains (branches) in linear cocatalysts
 D0_composition[1]      = 0#0.33         # 0.3                 # Fraction of chains in cocatalysts with 2 branches
-# D0_composition[2]      = 0.05                               # Input something if we have 4-branched cocatalysts etc..
-D0_composition[-1]      = 1 - np.sum(D0_composition[:-1])     # Fraction of chains in cocatalysts with x branches
+D0_composition[-1]      = 1 - np.sum(D0_composition[:-1])     # Fraction of chains in cocatalysts with max_branches branches
 #! #######################################################################################################################
 
 print(f"User input D0_composition is: {D0_composition}")
