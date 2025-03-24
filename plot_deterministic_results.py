@@ -35,14 +35,14 @@ def plot_deterministic_results(solution, pars):
     C = y[1]     # Catalyst concentration, mol/m3
     A = y[2]     # Acid concentration, mol/m3
     la0 = y[3]   # 0th moment of active chains, mol/m3
-    la1 = y[4]   # 1st moment of active chains, #!!!!!!
-    la2 = y[5]   # 2nd moment of active chains, #!!!!!!
+    la1 = y[4]   # 1st moment of active chains, mol/m3
+    la2 = y[5]   # 2nd moment of active chains, mol/m3
     mu0 = y[6]   # 0th moment of dormant chains, mol/m3
-    mu1 = y[7]   # 1st moment of dormant chains,#!!!!!!
-    mu2 = y[8]   # 2nd moment of dormant chains,#!!!!!!
+    mu1 = y[7]   # 1st moment of dormant chains, mol/m3
+    mu2 = y[8]   # 2nd moment of dormant chains, mol/m3
     ga0 = y[9]   # 0th moment of terminated chains, mol/m3
-    ga1 = y[10]  # 1st moment of terminated chains
-    ga2 = y[11]  # 2nd moment of terminated chains
+    ga1 = y[10]  # 1st moment of terminated chains, mol/m3
+    ga2 = y[11]  # 2nd moment of terminated chains, mol/m3
 
     t_h = t / 3600     # Time in hours (for plotting)
 
