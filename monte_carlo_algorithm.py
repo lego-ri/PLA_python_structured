@@ -310,7 +310,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     
             # calculate the number or elements in R_and_D
             #Ntot = R_and_D.shape[1] + Gn            # Total number of branches 
-            Ntot = total_num_D_mol + Gn              # Total number of polymer chains (i.e. 0th moment)        
+            Ntot = total_num_D_mol + Gn              # Total number of polymer chains (macromolecules, not branches) (i.e. 0th moment)        
             
             RD_all_column_sums = np.sum(R_and_D, axis=0)    
             RD_column_sums = RD_all_column_sums[RD_all_column_sums>0]   # Lengths of branched polymer chains 

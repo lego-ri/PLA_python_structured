@@ -23,7 +23,6 @@ import numpy as np
 
 total_time = process_time()      # Start the timer to measure the total run time of the file
 
-
 #**************************************************************************************************************************************************************************************************************************************************************
 #*    USER INPUT
 #**************************************************************************************************************************************************************************************************************************************************************
@@ -110,9 +109,9 @@ ga2 = y[11]  # 2nd moment of terminated chains, mol/m3
 # Conversion of monomer (%)
 conv = (M0 - M) / M0 * 100
 
-#TODO: ###########################################################################################
+#TODO: DONE
 # Number-average molecular weight of polymer
-Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (la0 + mu0 + ga0) * (D0_composition[0] + D0_composition[1]*2 + D0_composition[2]*3)
+Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + (la0 + mu0)  * (np.sum(D0_composition[i]/(i+1) for i in range(max_branches))))  #!!!!!!!!!
 
 # Weight-average molecular weight of polymer
 Mw_ODE = ModelPars.MW * (la2 + mu2 + ga2) / (la1 + mu1 + ga1) 
@@ -176,4 +175,4 @@ plot = plot_MC_results(MC_output, plot_pars)
 
 ########################################################################3
 total_time = process_time() - total_time
-print(f"Total processor time taken to run the whole {__file__} program: {total_time} seconds")
+print(f"Total processor time taken to run the whole program: {total_time} seconds")

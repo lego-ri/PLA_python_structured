@@ -29,7 +29,7 @@ def build_matrixes_forMC(D0_composition, Nx, R_round, max_branches):
         num_branch_per_mol_type[i] = int(D0_composition[i] * (Nx - 1))
         num_mol_per_type[i] = num_branch_per_mol_type[i] / (i + 1)
 
-    total_num_D_mol = int(np.sum(num_mol_per_type))  # Total number of molecules excluding 1 terminated chain
+    total_num_D_mol = int(np.sum(num_mol_per_type))  # Total number of macromolecules excluding 1 terminated chain
     
     # Define chain matrices
     D = np.ones((max_branches, total_num_D_mol))  # Dormant chains
