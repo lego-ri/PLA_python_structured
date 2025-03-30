@@ -14,12 +14,13 @@ from scipy.integrate import solve_ivp       # For ODE solving
 from measure_time import measure_time       # Decorator for time measurements
 from time import process_time           # To measure the time taken by the simulation
 from find_Nx import find_Nx
+# from tester import find_Nx
 from build_matrixes_forMC import build_matrixes_forMC
 from monte_carlo_algorithm import monte_carlo_algorithm
 from plot_MC_results import plot_MC_results
 import numpy as np
 
-#TODO: pro rozsireny zmenit momenty
+#TODO: pro rozvetveny zmenit momenty
 
 total_time = process_time()      # Start the timer to measure the total run time of the file
 
@@ -32,8 +33,8 @@ D0_composition = np.zeros(max_branches)
 
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
-D0_composition[0]      = 0.5#0.15                               # Fraction of chains (branches) in linear cocatalysts
-D0_composition[1]      = 0.5#0.33                               # Fraction of chains in cocatalysts with 2 branches
+D0_composition[0]      = 0.15#0.15                               # Fraction of chains (branches) in linear cocatalysts
+D0_composition[1]      = 0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
 #TODO#######################################################################################################################
 
 D0_composition[-1]      = 1 - np.sum(D0_composition[:-1])     # Fraction of chains in cocatalysts with max_branches branches
@@ -111,7 +112,8 @@ conv = (M0 - M) / M0 * 100
 
 #TODO: DONE
 # Number-average molecular weight of polymer
-Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + (la0 + mu0)  * (np.sum(D0_composition[i]/(i+1) for i in range(max_branches))))  #!!!!!!!!!
+Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + (la0 + mu0)  * (sum(D0_composition[i]/(i+1) for i in range(max_branches))))  #!!!!!!!!!
+# Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + la0 + mu0)
 
 # Weight-average molecular weight of polymer
 Mw_ODE = ModelPars.MW * (la2 + mu2 + ga2) / (la1 + mu1 + ga1) 
@@ -141,16 +143,16 @@ D_conc = mu0[-1]    # concentration of dormant chains
 #* Check if the model can be run with this initial composition and find the corresponding Nx
 # Define the parameters for the optimal Nx search
 min_Nx = 500                         # Minimal Nx
-max_Nx = 5000                        # Maximal Nx    
+max_Nx = 3000#5000                        # Maximal Nx    
 max_difference_RD_dec_round = 1e-2   # Maximal difference between rounded and non-rounded number of D,R
 eps_fraction = 1e-3                  # Margin for finding close fractions to the defined inlet composition
 
 # Pack pars for Nx search
-Nx_pars = [min_Nx, max_Nx, max_difference_RD_dec_round, eps_fraction] 
+Nx_pars = [min_Nx, max_Nx, max_difference_RD_dec_round, eps_fraction, max_branches] 
 process_pars = [D_conc, R_conc, ga0, t]
 
 # Find the optimal Nx
-D0_composition, Nx, D_round, R_round = find_Nx(D0_composition, Nx_pars, process_pars)
+D0_composition, Nx, D_round, R_round, Inlet_comp_sorted_results = find_Nx(D0_composition, Nx_pars, process_pars)
 
 #* Build matrixes for D and R chains for the MC simulation
 D, R, G, total_num_D_mol = build_matrixes_forMC(D0_composition, Nx, R_round, max_branches)

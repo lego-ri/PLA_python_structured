@@ -35,7 +35,6 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
     max_Nx = Nx_pars[1]                        # Maximal Nx    
     max_difference_RD_dec_round = Nx_pars[2]   # Maximal difference between rounded and non-rounded D,R
     eps_fraction = Nx_pars[3]                  # Margin for finding close fractions to the defined inlet composition
-    max_branches = Nx_pars[4]                  # Maximal number of branches of the most branched cocatalyst molecule
     
     #* Unpack the data from the deterministic model 
     D_conc = process_pars[0]                     # Dormant concentration, mol/m3
@@ -98,56 +97,45 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
     #* If the initial composition cannot be modelled, find the closest modellable compositions 
     if not found_initial_Nx: 
         print("User input D0_composition cannot be modelled with available Nx, searching for a close match...")
-        Nx_viable_no_G = Nx_viable - 1  # Subtract 1 terminated chain to get the total number of D and R initial
+        Nx_viable_no_G = Nx_viable - 1  # Substract 1 terminated chain to get the total number of D and R initial
         Inlet_comp_results = {}         # Define a dictionary to save the initial compositions and the Nx they belong to
         Inlet_comp_sorted_results = {}  # Define a dictionary for sorted results with the closest matches at the top
-
+        
         #* Step 1:
         # Iterate over possible Nx values to find close initial compositions
         for Nx in Nx_viable_no_G:
-            valid_compositions = []  # Define a list for saving possible initial compositions for current Nx
+            valid_compositions = [] # Define a list for saving possible initial compositions for current Nx
+        
+            # Iterate over possible values for the part divisible by 3 (must be > 0) (3 branched molecules)
+            for x in range(0, int(Nx), 3):  
+                # Iterate over possible values for the part divisible by 2 (must be > 0) (2 branched molecules)
+                for y in range(0, int(Nx) - x, 2):  
+                    z = Nx - x - y  # Compute the remaining part (linear molecules)
 
-            # Recursive function to generate compositions dynamically
-            def generate_compositions(branches, remaining_Nx, current_composition):
-                remaining_Nx = int(remaining_Nx)  # Ensure remaining_Nx is an integer
-                if branches == 1:  # Base case: linear molecules
-                    current_composition.append(remaining_Nx)
-                    # Calculate fractions
-                    fractions = [part / Nx for part in current_composition]
-                    fractions.reverse() # reverse the order of fractions to match the order in D0_composition (from linear to most branched)
-                    # Check if fractions are close to the user-defined composition
-                    is_frac_valid = all(
-                        D0_composition[i] - eps_fraction <= fractions[i] <= D0_composition[i] + eps_fraction
-                        for i in range(len(D0_composition))
-                    )
-                    # Ensure the total number of branches is divisible by the branch number
-                    is_divisible = all(
-                        current_composition[i] % (i + 1) == 0 for i in range(len(current_composition))
-                    )
-                    if is_frac_valid and is_divisible:
-                        valid_compositions.append(fractions)
-                    current_composition.pop()
-                    return
-
-                # Iterate over possible values divisible by the current branch number
-                for value in range(0, remaining_Nx + 1, branches):
-                    current_composition.append(value)
-                    generate_compositions(branches - 1, remaining_Nx - value, current_composition)
-                    current_composition.pop()
-
-            # Start generating compositions for the current Nx
-            generate_compositions(max_branches, Nx, [])
-
-            Inlet_comp_results[Nx + 1] = valid_compositions  # Save the valid compositions for each Nx to the dictionary
-
+                    if z > 0:   # Ensure all parts are greater than 0
+                        # Calculate the fraction of given cocatalysts D0
+                        frac_3 = x/Nx   # 3 branched molecules
+                        frac_2 = y/Nx   # 2 branched molecules
+                        frac_1 = z/Nx   # linear molecules
+                        
+                        initial_fractions = [frac_1, frac_2, frac_3] # Pack the fractions into a composition
+                        
+                        # Check if the initial_fractions are close (+-eps) to the user defined D0_composition
+                        is_frac_valid = True
+                        for i in range(len(D0_composition)):
+                            if not D0_composition[i]-eps_fraction <= initial_fractions[i] <= D0_composition[i]+eps_fraction:
+                                is_frac_valid = False
+                                break
+                        if is_frac_valid:
+                            valid_compositions.append((initial_fractions)) # Save compositions close to the wanted one
+        
+            Inlet_comp_results[Nx+1] = valid_compositions # Save the valid compositions for each Nx to the dictionary
+        
         #* Step 2: Sort the compositions by closeness to D0_composition
         for Nx, compositions in Inlet_comp_results.items():
             # Sort compositions by closeness to D0_composition
-            sorted_compositions = sorted(
-                compositions,
-                key=lambda comp: sum(abs(comp[i] - D0_composition[i]) for i in range(len(D0_composition)))
-            )
-            Inlet_comp_sorted_results[Nx] = sorted_compositions  # Save the sorted compositions to the dictionary
+            sorted_compositions = sorted( compositions, key=lambda comp: sum(abs(comp[i] - D0_composition[i]) for i in range(len(D0_composition))) )
+            Inlet_comp_sorted_results[Nx] = sorted_compositions # Save the sorted compositions to the dictionary
 
         #* Step 3: Find the overall best match across all Nx values
         best_Nx = None
@@ -158,7 +146,7 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
         for Nx, sorted_compositions in Inlet_comp_sorted_results.items():
             if sorted_compositions:  # Ensure there is at least one valid composition
                 top_composition = sorted_compositions[0]  # Closest match for this Nx
-                error = sum(abs(top_composition[i] - D0_composition[i]) for i in range(len(D0_composition)))
+                error = sum(abs(top_composition[i] - D0_composition[i]) for i in range(3))
 
                 if error < best_error:  # Check if this is the new best overall match
                     best_error = error
@@ -169,8 +157,8 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
         if best_match:
             D0_composition = best_match             # Save the found D0_composition
             Nx = int(best_Nx)                       # Save the found Nx                          
-            Nx_index = np.where(Nx_viable == Nx)[0][0]  # [0] extracts the indices, second [0] gets the first index
-            D_round, R_round = int(D_round_viable[Nx_index]), int(R_round_viable[Nx_index])  # Save the found D and R corresponding to Nx
+            Nx_index = np.where(Nx_viable == Nx)[0][0] # [0] extracts the indices, secon [0] gets the first indice (there is alway just one, but this is to prevent deprecation warning on next line where we convet it to an int)
+            D_round, R_round = int(D_round_viable[Nx_index]), int(R_round_viable[Nx_index]) # Save the found D and R corresponding to Nx
             print(f"Overall Best Match Found:")
             print(f"Nx = {Nx}")
             print(f"D_round is: {D_round}, R_round is: {R_round}, G is set to 1")
@@ -178,7 +166,6 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
             print(f"Total Deviation from Target (Sum of squares): {best_error}")
         else:
             print("No valid inlet compositions found within the target range from the user defined composition -> code terminated.")
-            exit()
+            exit()\
                 
-    return D0_composition, Nx, D_round, R_round, Inlet_comp_sorted_results
-
+    return D0_composition, Nx, D_round, R_round
