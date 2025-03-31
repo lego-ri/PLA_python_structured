@@ -180,5 +180,5 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
             print("No valid inlet compositions found within the target range from the user defined composition -> code terminated.")
             exit()
                 
-    return D0_composition, Nx, D_round, R_round, Inlet_comp_sorted_results
+    return D0_composition, Nx, D_round, R_round#, Inlet_comp_sorted_results
 

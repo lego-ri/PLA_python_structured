@@ -33,14 +33,19 @@ D0_composition = np.zeros(max_branches)
 
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
-D0_composition[0]      = 0.15#0.15                               # Fraction of chains (branches) in linear cocatalysts
-D0_composition[1]      = 0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
+D0_composition[0]      = 0.15                               # Fraction of chains (branches) in linear cocatalysts
+D0_composition[1]      = 0.33                               # Fraction of chains in cocatalysts with 2 branches
+# D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
 #TODO#######################################################################################################################
 
 D0_composition[-1]      = 1 - np.sum(D0_composition[:-1])     # Fraction of chains in cocatalysts with max_branches branches
 print(f"User input D0_composition is: {D0_composition}")
 
-# Check if the given fractions for cocatalyst composition sum up to 1
+# Check the user input composition
+if max_branches != len(D0_composition):
+    print('Error: The number of branches does not match the length of the D0_composition array!!!')
+    exit()  
+
 if D0_composition[-1] < 0: 
     print('Error: The initial composition does not sum up to 1!!!')
     exit()  
@@ -49,7 +54,7 @@ if D0_composition[-1] < 0:
 #*    DETERMINISTIC MODEL
 #**************************************************************************************************************************
 
-print("Deterministic model:")
+print("\nDeterministic model:")
 
 #* Apply initial conditions
 small_number = 1e-7    # Define the small_number
@@ -82,7 +87,7 @@ t_span = [tbeg, tend]  # time interval for the ODE integration
 @measure_time
 def solve_ode_system():
     # Use solve_ivp to solve the ODE system
-    solution = solve_ivp(lambda t, y: model_eqs(t, y, ModelPars), t_span, y0, method='BDF') 
+    solution = solve_ivp(lambda t, y: model_eqs(t, y, ModelPars, D0_composition, max_branches), t_span, y0, method='BDF') 
     # For a stiff problem, implicit methods might be better than the used RK23 like BDF or Radau?
     return solution
 
@@ -110,13 +115,17 @@ ga2 = y[11]  # 2nd moment of terminated chains, mol/m3
 # Conversion of monomer (%)
 conv = (M0 - M) / M0 * 100
 
-#TODO: DONE
+#TODO: 
 # Number-average molecular weight of polymer
-Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + (la0 + mu0)  * (sum(D0_composition[i]/(i+1) for i in range(max_branches))))  #!!!!!!!!!
+#? works
+Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + (la0 + mu0)  * (sum(D0_composition[i]/(i+1) for i in range(max_branches))))  
 # Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + la0 + mu0)
 
 # Weight-average molecular weight of polymer
-Mw_ODE = ModelPars.MW * (la2 + mu2 + ga2) / (la1 + mu1 + ga1) 
+#? Does not work - why? lookup Moment bilance equations and their derivation
+Mw_ODE = ModelPars.MW * (ga2 + (la2 + mu2)  * (sum(D0_composition[i]*(i+1) for i in range(max_branches)))) / (la1 + mu1 + ga1) 
+# Mw_ODE = ModelPars.MW * (la2 + mu2 + ga2) / (la1 + mu1 + ga1) 
+
 
 # Print final conversion, Mw, and PDI
 print(f'Conversion = {conv[-1]:.2f} [%]')           # [-1] is the last element of the array,
@@ -143,7 +152,7 @@ D_conc = mu0[-1]    # concentration of dormant chains
 #* Check if the model can be run with this initial composition and find the corresponding Nx
 # Define the parameters for the optimal Nx search
 min_Nx = 500                         # Minimal Nx
-max_Nx = 3000#5000                        # Maximal Nx    
+max_Nx = 5000                        # Maximal Nx    
 max_difference_RD_dec_round = 1e-2   # Maximal difference between rounded and non-rounded number of D,R
 eps_fraction = 1e-3                  # Margin for finding close fractions to the defined inlet composition
 
@@ -152,7 +161,7 @@ Nx_pars = [min_Nx, max_Nx, max_difference_RD_dec_round, eps_fraction, max_branch
 process_pars = [D_conc, R_conc, ga0, t]
 
 # Find the optimal Nx
-D0_composition, Nx, D_round, R_round, Inlet_comp_sorted_results = find_Nx(D0_composition, Nx_pars, process_pars)
+D0_composition, Nx, D_round, R_round = find_Nx(D0_composition, Nx_pars, process_pars)
 
 #* Build matrixes for D and R chains for the MC simulation
 D, R, G, total_num_D_mol = build_matrixes_forMC(D0_composition, Nx, R_round, max_branches)

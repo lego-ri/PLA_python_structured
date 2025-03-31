@@ -45,10 +45,10 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     G = mc_pars[6]
     total_num_D_mol = mc_pars[7]
     
-    D_conc = process_pars[0]
-    R_conc = process_pars[1]
-    ga0 = process_pars[2] 
-    t = process_pars[3]
+    D_conc = process_pars[0]    # Concentration of dormant chains from the deterministic model main_process
+    R_conc = process_pars[1]    # Concentration of active chains from the deterministic model main_process
+    ga0 = process_pars[2]       # Concentration of terminated chains from the deterministic model main_process
+    t = process_pars[3]         # Time in simulation, s
     
     k_p = ModelPars.k_p
     k_d = ModelPars.k_d
@@ -294,7 +294,8 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         current_time = time() - start_time  # Gets the CPU time in seconds since the start of teh simulation
         if current_time > 20*current_time_counter:
             current_time_counter += 1
-            print(f"Time elapsed: {current_time:.2f} seconds\nsimulation ongoing...")
+            # print(f"Real time elapsed: {current_time:.2f} seconds\nsimulation ongoing...")
+            print(f"Current time in simulation: {time_sim:.2f} seconds out of {time_end:.2f} seconds")
             
         #* Data output - for post processing
         if time_sim > out_idx * fq:     # register the data every fq seconds

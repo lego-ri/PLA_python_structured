@@ -12,7 +12,7 @@ import numpy as np # Python numerical library
 
 #TODO: pro rozsireny zmenit momenty
 
-def model_eqs(t, y, pars):
+def model_eqs(t, y, pars, D0_composition, max_branches):
     #* Unpack State variables
     M = y[0]        # Monomer concentration, mol/m3
     C = y[1]        # Catalyst concentration, mol/m3
@@ -35,6 +35,14 @@ def model_eqs(t, y, pars):
     k_s = pars.k_s          # Chain-transfer rate coefficient m3/mol/s
     k_te = pars.k_te        # Intermolecular transesterification rate coefficient, m3/mol/s
     k_de = pars.k_de        # Nonradical random chain scission rate coefficient, 1/s
+
+    #* Branched moments
+    #TODO: Find why it has no influence on the results - then delete this section
+    # mu0 = mu0*(sum(D0_composition[i]/(i+1) for i in range(max_branches)))
+    # la0 = la0*(sum(D0_composition[i]/(i+1) for i in range(max_branches)))
+    
+    # mu2 = mu2*(sum(D0_composition[i]*(i+1) for i in range(max_branches)))
+    # la2 = la2*(sum(D0_composition[i]*(i+1) for i in range(max_branches)))
 
     #* Moment closure equations - 3rd momenets
     la3 = la2 * (2 * la2 * la0 - la1**2) / (la1 * la0)
