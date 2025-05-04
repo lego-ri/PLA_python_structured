@@ -55,12 +55,12 @@ def plot_MC_results(MC_output, plot_pars):
 
     # Plot chain concentrations
     plt.figure(2)
-    plt.plot(t_out, R_out, label='Active chains')
-    plt.plot(t_out, D_out, label='Dormant chains')
-    plt.plot(t_out, G_out, label='Terminated chains')
-    plt.plot(t_out, suma_n_tot, label='Total number of chains')
+    plt.plot(t_out, R_out, label='Active branches')
+    plt.plot(t_out, D_out, label='Dormant branches')
+    plt.plot(t_out, G_out, label='Terminated branches')
+    plt.plot(t_out, (R_out+D_out+G_out), label='Total number of branches')
     plt.xlabel('Time (s)')
-    plt.ylabel('Number of chains (-)')
+    plt.ylabel('Number of branches (-)')
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
@@ -86,6 +86,42 @@ def plot_MC_results(MC_output, plot_pars):
     plt.xlabel('Log MW (kg/mol)')
     plt.ylabel('Frequency')
     # plt.xlim([-2,max(logMW)+1])
+    plt.tight_layout()
+    
+    #* Plot ratio between Mw,Mn from ODE and MC
+    # Find the closest indices in `t_out` for each value in `t`
+    closest_indices = [np.argmin(np.abs(t_out - t_val)) for t_val in t]
+
+    # Extract the corresponding `Mn_out` values using the closest indices
+    Mn_out_closest = Mn_out[closest_indices]
+
+    # Filter the data to include only time points from 1 second onward (mismatch too big for t<1s)
+    exclude_time = 30 # s
+    t_filtered = t[t >= exclude_time]
+    Mn_ODE_filtered = Mn_ODE[t >= exclude_time]
+    Mn_out_closest_filtered = Mn_out_closest[t >= exclude_time]
+
+    # Calculate the ratio for the filtered data
+    ratio_Mn_filtered = Mn_out_closest_filtered / Mn_ODE_filtered
+        
+    # Extract the corresponding `Mw_out` values using the closest indices
+    Mw_out_closest = Mw_out[closest_indices]
+
+    # Filter the data to include only time points from exclude_time second onward
+    Mw_ODE_filtered = Mw_ODE[t >= exclude_time]
+    Mw_out_closest_filtered = Mw_out_closest[t >= exclude_time]
+
+    # Calculate the ratio for the filtered data
+    ratio_Mw_filtered = Mw_out_closest_filtered / Mw_ODE_filtered
+
+    # Plot the ratio from exclude_time second onward
+    plt.figure()
+    plt.plot(t_filtered, ratio_Mn_filtered, 'b-', label='Mn (MC) / Mn (ODE)')
+    plt.plot(t_filtered, ratio_Mw_filtered, 'r-', label='Mw (MC) / Mw (ODE)')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Ratio')
+    plt.legend()
+    plt.grid(True)
     plt.tight_layout()
 
     plt.show()

@@ -34,40 +34,31 @@ def model_eqs(t, y, pars, D0_composition, max_branches):
     k_d = pars.k_d          # Depropagation rate coefficient, 1/s
     k_s = pars.k_s          # Chain-transfer rate coefficient m3/mol/s
     k_te = pars.k_te        # Intermolecular transesterification rate coefficient, m3/mol/s
-    k_de = pars.k_de        # Nonradical random chain scission rate coefficient, 1/s
-
-    #* Branched moments
-    #TODO: Find why it has no influence on the results - then delete this section
-    # mu0 = mu0*(sum(D0_composition[i]/(i+1) for i in range(max_branches)))
-    # la0 = la0*(sum(D0_composition[i]/(i+1) for i in range(max_branches)))
-    
-    # mu2 = mu2*(sum(D0_composition[i]*(i+1) for i in range(max_branches)))
-    # la2 = la2*(sum(D0_composition[i]*(i+1) for i in range(max_branches)))
+    k_de = pars.k_de        # Nonradical random chain scission rate coefficient, 1/s    
 
     #* Moment closure equations - 3rd momenets
     la3 = la2 * (2 * la2 * la0 - la1**2) / (la1 * la0)
     mu3 = mu2 * (2 * mu2 * mu0 - mu1**2) / (mu1 * mu0)
     ga3 = ga2 * (2 * ga2 * ga0 - ga1**2) / (ga1 * ga0)
 
-
     #****************************************************************
     #* Model equations
     # Initialize derivatives vector
     dy = np.zeros(12)
 
-    # Balance of monomer, lactide
-    dy[0] = - k_p * M * la0 + k_d * la0
+    # Balance of monomer (M) - lactide
+    dy[0] = - k_p * M * la0 + k_d * la0 
 
-    # Balance of catalyst, tin(II) octoate
+    # Balance of catalyst (C) - tin(II) octoate
     dy[1] = - k_a1 * C * mu0 + k_a2 * A * la0
 
-    # Balance of octanoic acid
+    # Balance of octanoic acid (A)
     dy[2] = k_a1 * C * mu0 - k_a2 * A * la0
 
-    # Balance of 0th moment (concentration) of active chains
+    # Balance of 0th moment (concentration) of active chains 
     dy[3] = k_a1 * mu0 * C - k_a2 * la0 * A
 
-    # Balance of 1st moment of active chains
+    # Balance of 1st moment of active chains 
     dy[4] = (k_a1 * mu1 * C - k_a2 * la1 * A + 2 * k_p * M * la0 - 2 * k_d * la0
              - k_s * la1 * mu0 + k_s * mu1 * la0 - k_te * la1 * (mu1 - mu0)
              + (1/2) * k_te * la0 * (mu2 - mu1) - k_te * la1 * (ga1 - ga0)

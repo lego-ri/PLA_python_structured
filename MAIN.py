@@ -13,6 +13,7 @@ from plot_deterministic_results import plot_deterministic_results       # Plotti
 from scipy.integrate import solve_ivp       # For ODE solving
 from measure_time import measure_time       # Decorator for time measurements
 from time import process_time           # To measure the time taken by the simulation
+from time import time
 from find_Nx import find_Nx
 # from tester import find_Nx
 from build_matrixes_forMC import build_matrixes_forMC
@@ -23,18 +24,19 @@ import numpy as np
 #TODO: pro rozvetveny zmenit momenty
 
 total_time = process_time()      # Start the timer to measure the total run time of the file
+total_total_time = time()        # Start the timer to measure the total run time of the file
 
 #**************************************************************************************************************************************************************************************************************************************************************
 #*    USER INPUT
 #**************************************************************************************************************************************************************************************************************************************************************
 
-max_branches = 3                                              # Number of branches of the most branched cocatalyst molecule
+max_branches = 3                                             # Number of branches of the most branched cocatalyst molecule
 D0_composition = np.zeros(max_branches)                      
 
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
-D0_composition[0]      = 0.15                               # Fraction of chains (branches) in linear cocatalysts
-D0_composition[1]      = 0.33                               # Fraction of chains in cocatalysts with 2 branches
+D0_composition[0]      = 0#0.15                               # Fraction of chains (branches) in linear cocatalysts
+D0_composition[1]      = 0#0.33                               # Fraction of chains in cocatalysts with 2 branches
 # D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
 #TODO#######################################################################################################################
 
@@ -117,15 +119,12 @@ conv = (M0 - M) / M0 * 100
 
 #TODO: 
 # Number-average molecular weight of polymer
-#? works
 Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + (la0 + mu0)  * (sum(D0_composition[i]/(i+1) for i in range(max_branches))))  
 # Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + la0 + mu0)
 
 # Weight-average molecular weight of polymer
-#? Does not work - why? lookup Moment bilance equations and their derivation
-Mw_ODE = ModelPars.MW * (ga2 + (la2 + mu2)  * (sum(D0_composition[i]*(i+1) for i in range(max_branches)))) / (la1 + mu1 + ga1) 
+Mw_ODE = ModelPars.MW * (ga2 + (mu2 + la2) * (sum(D0_composition[i]*(i+1) for i in range(max_branches)))) / (la1 + mu1 + ga1) 
 # Mw_ODE = ModelPars.MW * (la2 + mu2 + ga2) / (la1 + mu1 + ga1) 
-
 
 # Print final conversion, Mw, and PDI
 print(f'Conversion = {conv[-1]:.2f} [%]')           # [-1] is the last element of the array,
@@ -152,7 +151,7 @@ D_conc = mu0[-1]    # concentration of dormant chains
 #* Check if the model can be run with this initial composition and find the corresponding Nx
 # Define the parameters for the optimal Nx search
 min_Nx = 500                         # Minimal Nx
-max_Nx = 5000                        # Maximal Nx    
+max_Nx = 6000                        # Maximal Nx    
 max_difference_RD_dec_round = 1e-2   # Maximal difference between rounded and non-rounded number of D,R
 eps_fraction = 1e-3                  # Margin for finding close fractions to the defined inlet composition
 
@@ -184,6 +183,8 @@ plot = plot_MC_results(MC_output, plot_pars)
 
 
 
-########################################################################3
+########################################################################
 total_time = process_time() - total_time
+total_total_time = time() - total_total_time
+print(f"Total time taken to run the Monte Carlo simulation: {total_total_time} seconds")
 print(f"Total processor time taken to run the whole program: {total_time} seconds")

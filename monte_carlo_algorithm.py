@@ -97,7 +97,8 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     start_time = time()     # To measure the time taken by the simulation
     time_sim = 0                    # Reaction time in simulation, s (not time taken to simulate)
     Rate = np.zeros(reac_num)       # Initiate the vector of reaction rate
-
+    case_counts = np.zeros(reac_num, dtype=int) # Initialize a counter array for the 12 cases
+      
     while time_sim <= time_end:        
         # Get concentrations of non-polymeric (monomer) species from process ODE simulation
         M_cur = M_fit(time_sim) # (cur~current concentration)
@@ -124,6 +125,8 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         #* Select the reaction to happen (randomly weighted by reaction rates)
         Reac_idx = np.random.choice(reac_num, p=Rate/np.sum(Rate))    # inbuilt function that does the same as our custom sel_reac
         # Reac_idx = SelReac.sel_reac(Rate, reac_num)                     # Handmade function 
+        # Increment the counter for the selected case
+        case_counts[Reac_idx] += 1
 
         #* Realize the selected reaction step
         match Reac_idx:
@@ -152,7 +155,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
 
             case 3:  # Random scission (R)
                 # Get indexes of active chains with length greater than 1
-                R_idx = np.argwhere(R>1)   # Indices of non NaN values
+                R_idx = np.argwhere(R>1)   # Indices of dormant chains available for scission
                 if R_idx.size > 0:
                     R_lengths = R[R_idx[:, 0], R_idx[:, 1]] # Lengths of active chains 
                     R_idx_random = R_idx[np.random.choice(R_idx.shape[0], p=R_lengths/np.sum(R_lengths))] # Select random active chain (radical)
@@ -165,7 +168,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
 
             case 4:  # Random scission (D)
                 # Get indexes of dormant chains with length greater than 1
-                D_idx = np.argwhere(D>1)   # Indices of non NaN values
+                D_idx = np.argwhere(D>1)   # Indices of dormant chains available for scission
                 if D_idx.size > 0:
                     D_lengths = D[D_idx[:, 0], D_idx[:, 1]] # Lengths of active chains 
                     D_probability = D_lengths/np.sum(D_lengths) # Probability of each active chain proportional to chain length
@@ -178,13 +181,12 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     continue
 
             case 5:  # Random scission (G)
-                #? setting an array element with a sequence??? error
                 # Get indexes of terminated chains with length greater than 1
                 G_idx = np.argwhere(G > 1).flatten()  # Flatten to get a 1D array of indices
                 if G_idx.size > 0:
                     probabilities = G[G_idx] / np.sum(G[G_idx])  # Calculate probabilities only for chains with length > 1
                     G_idx_random = np.random.choice(G_idx, p=probabilities)  # Select a random index from G_idx with probability proportional to chain length
-                    sub_len = np.random.randint(1, G[G_idx])  # Randomly select subchain length (part of the terminated chain) of size 1 up to the chain length minus 1
+                    sub_len = np.random.randint(1, G[G_idx_random])  # Randomly select subchain length (part of the terminated chain) of size 1 up to the chain length minus 1
                     G[G_idx_random] -= sub_len  # Remove subchain from the selected terminated chain
                     G = np.append(G, sub_len)  # Add the new terminated chain (from part of the terminated chain) to G
                 else:
@@ -308,24 +310,24 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
 
             # Combine the matrixes of dormant and active branches into one matrix of all species except for terminated chains
             R_and_D = np.where(D<1, R, D)
-                    
+        
             # calculate the number or elements in R_and_D
             #Ntot = R_and_D.shape[1] + Gn            # Total number of branches 
             Ntot = total_num_D_mol + Gn              # Total number of polymer chains (macromolecules, not branches) (i.e. 0th moment)        
             
-            RD_all_column_sums = np.sum(R_and_D, axis=0)    
-            RD_column_sums = RD_all_column_sums[RD_all_column_sums>0]   # Lengths of branched polymer chains 
+            RD_column_sums = np.sum(R_and_D, axis=0) # Lengths of all macromolecules (each column is a macromolecule with x branches(rows))            
                     
             Sum1 = np.sum(R_and_D) + np.sum(G)                  # Sum of all polymer chain lengths (1st moment)
             Sum2 = np.sum(RD_column_sums**2) + np.sum(G**2)     # Sum of all squared polymer chain lengths (2nd moment)
+
             
-            # Evaluate Mn, Mw # TODO: chagne the way Mn and Mw are calculated
+            # Evaluate Mn, Mw # TODO: chagne the way Mn and Mw are calculated - MW??
             Mn_out = np.append(Mn_out, MW * Sum1 / Ntot)        # Number-average mol. weight, kg/mol
             Mw_out = np.append(Mw_out, MW * Sum2 / Sum1)        # Weight-average mol. weight, kg/mol 
-            suma_n_tot = np.append(suma_n_tot, Ntot)            # Save the total number of polymer chains
-            
+            suma_n_tot = np.append(suma_n_tot, Ntot)            # Save the total number of polymer chains            
             
     #* End of simulation, evaluated time taken to simulate the process
     print(f"Total number of chains is Ntot={Ntot}, reactive branches Rn={Rn}, dormant branches Dn={Dn}, terminated chains G={Gn}")
+    print(f"Total number for each case: {case_counts}")
     
-    return t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_all_column_sums, R, D, G
+    return t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G
