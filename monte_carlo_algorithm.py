@@ -193,7 +193,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     print("Random scission (G) chosen, but no chains with length>1 available to split.")
                     continue
                 
-            case 6:  # "Active" transesterification (R+D)
+            case 6:  # "Active" transesterification (R+D) #!!!!
                 D_idx = np.argwhere(D>1)   # Indices of considered dormant chains values
                 R_idx = np.argwhere(R>0)   # Indices of all activee chains
                 if D_idx.size > 0:
@@ -308,9 +308,10 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
             D_out = np.append(D_out, Dn)                    # Register the number of dormant chains
             G_out = np.append(G_out, Gn)                    # Register the number of terminated chains
 
+            #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # Combine the matrixes of dormant and active branches into one matrix of all species except for terminated chains
             R_and_D = np.where(D<1, R, D)
-        
+            
             # calculate the number or elements in R_and_D
             #Ntot = R_and_D.shape[1] + Gn            # Total number of branches 
             Ntot = total_num_D_mol + Gn              # Total number of polymer chains (macromolecules, not branches) (i.e. 0th moment)        
@@ -325,9 +326,10 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
             Mn_out = np.append(Mn_out, MW * Sum1 / Ntot)        # Number-average mol. weight, kg/mol
             Mw_out = np.append(Mw_out, MW * Sum2 / Sum1)        # Weight-average mol. weight, kg/mol 
             suma_n_tot = np.append(suma_n_tot, Ntot)            # Save the total number of polymer chains            
+            #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             
     #* End of simulation, evaluated time taken to simulate the process
     print(f"Total number of chains is Ntot={Ntot}, reactive branches Rn={Rn}, dormant branches Dn={Dn}, terminated chains G={Gn}")
-    print(f"Total number for each case: {case_counts}")
+    print(f"Number of times each reaction occured: {case_counts}")
     
     return t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G

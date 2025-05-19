@@ -21,8 +21,6 @@ from monte_carlo_algorithm import monte_carlo_algorithm
 from plot_MC_results import plot_MC_results
 import numpy as np
 
-#TODO: pro rozvetveny zmenit momenty
-
 total_time = process_time()      # Start the timer to measure the total run time of the file
 total_total_time = time()        # Start the timer to measure the total run time of the file
 
@@ -35,7 +33,7 @@ D0_composition = np.zeros(max_branches)
 
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
-D0_composition[0]      = 0#0.15                               # Fraction of chains (branches) in linear cocatalysts
+D0_composition[0]      = 0.8#0.15                               # Fraction of chains (branches) in linear cocatalysts
 D0_composition[1]      = 0#0.33                               # Fraction of chains in cocatalysts with 2 branches
 # D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
 #TODO#######################################################################################################################
@@ -118,13 +116,18 @@ ga2 = y[11]  # 2nd moment of terminated chains, mol/m3
 conv = (M0 - M) / M0 * 100
 
 #TODO: 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+avg_bran_in_macromol = sum(D0_composition[i]*(i+1) for i in range(max_branches))
 # Number-average molecular weight of polymer
 Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + (la0 + mu0)  * (sum(D0_composition[i]/(i+1) for i in range(max_branches))))  
 # Mn_ODE = ModelPars.MW * (la1 + mu1 + ga1) / (ga0 + la0 + mu0)
 
 # Weight-average molecular weight of polymer
-Mw_ODE = ModelPars.MW * (ga2 + (mu2 + la2) * (sum(D0_composition[i]*(i+1) for i in range(max_branches)))) / (la1 + mu1 + ga1) 
+Mw_ODE_2 = ModelPars.MW * (ga2 + ((((mu2 + la2)/(la0+mu0))**0.5 )*avg_bran_in_macromol)**2*((la0+mu0)/avg_bran_in_macromol)                ) / (la1 + mu1 + ga1) 
+Mw_ODE_3 = ModelPars.MW * (ga2 + (((mu2/mu0)**0.5 )*avg_bran_in_macromol)**2*((mu0)/avg_bran_in_macromol) + (((la2/la0)**0.5 )*avg_bran_in_macromol)**2*((la0)/avg_bran_in_macromol) ) / (la1 + mu1 + ga1) 
+Mw_ODE = ModelPars.MW * (ga2 + (mu2 + la2) * avg_bran_in_macromol) / (la1 + mu1 + ga1) 
 # Mw_ODE = ModelPars.MW * (la2 + mu2 + ga2) / (la1 + mu1 + ga1) 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # Print final conversion, Mw, and PDI
 print(f'Conversion = {conv[-1]:.2f} [%]')           # [-1] is the last element of the array,
@@ -175,7 +178,7 @@ t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sum
 #* Post processing
 # Pack MC results for plotting
 MC_output = [t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, G]
-plot_pars = [t, Mn_ODE, Mw_ODE]
+plot_pars = [t, Mn_ODE, Mw_ODE,Mw_ODE_2,Mw_ODE_3]
 
 # Plotting
 plot = plot_MC_results(MC_output, plot_pars)

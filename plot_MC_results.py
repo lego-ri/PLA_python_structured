@@ -24,7 +24,9 @@ def plot_MC_results(MC_output, plot_pars):
     t = plot_pars[0]
     Mn_ODE = plot_pars[1]
     Mw_ODE = plot_pars[2]
-    
+    Mw_ODE_2 = plot_pars[3]
+    Mw_ODE_3 = plot_pars[4]
+  
     MW = ModelPars.MW        # Molecular weight of lactoyl (monomer) group, kg/mol
     
     # Other parameters for plotting
@@ -123,5 +125,19 @@ def plot_MC_results(MC_output, plot_pars):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    
+    #* plot Mw_ODE 
+    plt.figure()
+    plt.plot(t, Mw_ODE, 'r.', label='M_w (ODE)')
+    plt.plot(t, Mw_ODE_2, 'b-', label='M_w (ODE) 2')
+    # plt.plot(t, Mw_ODE_3, 'g*', label='M_w (ODE) 3')
+
+    plt.xlabel('Time (s)')
+    plt.ylabel('Average molecular weight (kg/mol)')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    
 
     plt.show()
