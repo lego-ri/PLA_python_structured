@@ -193,7 +193,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     print("Random scission (G) chosen, but no chains with length>1 available to split.")
                     continue
                 
-            case 6:  # "Active" transesterification (R+D) #!!!!
+            case 6:  # "Active" transesterification (R+D) 
                 D_idx = np.argwhere(D>1)   # Indices of considered dormant chains values
                 R_idx = np.argwhere(R>0)   # Indices of all activee chains
                 if D_idx.size > 0:
