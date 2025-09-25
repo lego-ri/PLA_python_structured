@@ -115,7 +115,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         Rate[3] = k_de_MC * np.sum(R)           # Random scission (R)
         Rate[4] = k_de_MC * np.sum(D)           # Random scission (D)
         Rate[5] = k_de_MC * np.sum(G)           # Random scission (G)
-        Rate[6] = k_te_MC * Rn * np.sum(D)      # "Active" transesterification (R+D)
+        Rate[6] = 0#k_te_MC * Rn * np.sum(D)      # "Active" transesterification (R+D)
         Rate[7] = k_te_MC * Rn * np.sum(D)/Dn   # "Passive" transesterification (R+D), if Dn > 0 else 0
         Rate[8] = 2 * k_te_MC * Rn * np.sum(R) # "Active" transesterification (R+R)
         Rate[9] = 2 * k_te_MC * np.sum(R)      # "Passive" transesterification (R+R)
