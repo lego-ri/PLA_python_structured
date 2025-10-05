@@ -34,7 +34,7 @@ D0_composition = np.zeros(max_branches)
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
 D0_composition[0]      = 0#0.15                               # Fraction of chains (branches) in linear cocatalysts
-D0_composition[1]      = 0#0.33                               # Fraction of chains in cocatalysts with 2 branches
+D0_composition[1]      = 1#0.33                               # Fraction of chains in cocatalysts with 2 branches
 # D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
 #TODO#######################################################################################################################
 
@@ -135,7 +135,7 @@ print(f'Mw = {Mw_ODE[-1]:.2f} [kg/mol]')                 #  :.2f formats the num
 print(f'PDI = {Mw_ODE[-1] / Mn_ODE[-1]:.2f}')   # Polydispersity index ("Zp"), width of the distribution
 
 # Plot the results and save them to a .csv and .npy file
-# plot_deterministic_results( solution, ModelPars )
+plot_deterministic_results( solution, ModelPars )
 
 
 #**************************************************************************************************************************

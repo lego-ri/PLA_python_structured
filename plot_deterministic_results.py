@@ -118,7 +118,8 @@ def plot_deterministic_results(solution, pars):
     plt.show(block=False)
 
     #* Plot relative reaction rates with improved readability
-    plt.figure(figsize=(12, 6))  # Increase figure size for better visibility
+    # plt.figure(figsize=(12, 6))  # Increase figure size for better visibility
+    plt.figure()
     # Custom color palette
     colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', 
               '#ffff33', '#a65628', '#f781bf', '#999999', '#66c2a5', '#fc8d62']
@@ -138,10 +139,24 @@ def plot_deterministic_results(solution, pars):
     plt.xlim(0, max(t_h))  # Set x-axis limits
     plt.xlabel('Time (hours)')
     plt.ylabel('Relative reaction rate (%)')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')  # Move legend outside the plot
+    # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')  # Move legend outside the plot
+    plt.legend(loc='best')
     plt.grid(True)
     plt.tight_layout()  # Adjust layout to prevent clipping
     plt.show(block=False)    
+        
+    #* plot transesterification rates only
+    plt.figure()
+    plt.plot(t_h, R_te1/R_sum * 100, color=colors[5], label='Transesterification (active)', linestyle='-', linewidth=3)
+    plt.plot(t_h, R_te2/R_sum * 100, color=colors[6], label='Transesterification (dormant)', linestyle='--')
+    plt.plot(t_h, R_te3/R_sum * 100, color=colors[7], label='Transesterification (terminated)', linestyle=':')
+    plt.xlim(0, max(t_h))  # Set x-axis limits
+    plt.xlabel('Time (hours)')
+    plt.ylabel('Relative reaction rate (%)')
+    plt.legend(loc='best')
+    plt.grid(True)
+    plt.tight_layout()  # Adjust layout to prevent clipping
+    plt.show(block=False)
     
     #* Plot chain moments
     plt.figure()

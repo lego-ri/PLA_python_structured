@@ -54,9 +54,23 @@ def plot_MC_results(MC_output, plot_pars):
                 'Transesterification (R+G)'])
     plt.grid(True)
     plt.tight_layout()
+    plt.show(block=False)
+    
+    # Plot transesterification rates only
+    plt.figure(2)
+    sumRates = np.sum(Rates_out, axis=0) + small_number # axis=0 to sum over columns
+    plt.plot(t_out, (Rates_out[6, :] + Rates_out[7, :]) / sumRates * 100)
+    plt.plot(t_out, (Rates_out[8, :] + Rates_out[9, :]) / sumRates * 100)
+    plt.plot(t_out, (Rates_out[10, :] + Rates_out[11, :]) / sumRates * 100)
+    plt.xlabel('Time (s)')  
+    plt.ylabel('Relative reaction rates (%)')
+    plt.legend(['Transesterification (R+D)', 'Transesterification (R+R)', 'Transesterification (R+G)'])
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show(block=False)
 
     # Plot chain concentrations
-    plt.figure(2)
+    plt.figure(3)
     plt.plot(t_out, R_out, label='Active branches')
     plt.plot(t_out, D_out, label='Dormant branches')
     plt.plot(t_out, G_out, label='Terminated branches')
@@ -66,9 +80,10 @@ def plot_MC_results(MC_output, plot_pars):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    plt.show(block=False)
 
     # Plot average molecular weights
-    plt.figure(3)
+    plt.figure(4)
     plt.plot(t_out, savgol_filter(Mn_out, 5, 3), 'b-', label='M_n (MC)')    # Smoothing the data using savgol_filter 
     plt.plot(t_out, savgol_filter(Mw_out, 5, 3), 'r-', label='M_w (MC)')
     plt.plot(t, Mn_ODE, 'b.', label='M_n (ODE)')
@@ -78,10 +93,11 @@ def plot_MC_results(MC_output, plot_pars):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    plt.show(block=False)
 
 
     # Plot MWD (mlecular weight ddistribution)
-    plt.figure(4)
+    plt.figure(5)
     all_chains = MW*np.concatenate((RD_column_sums, G))
     logMW = np.log10(all_chains)
     plt.hist(logMW, bins=30)
@@ -89,6 +105,7 @@ def plot_MC_results(MC_output, plot_pars):
     plt.ylabel('Frequency')
     # plt.xlim([-2,max(logMW)+1])
     plt.tight_layout()
+    plt.show(block=False)
     
     #* Plot ratio between Mw,Mn from ODE and MC
     # Find the closest indices in `t_out` for each value in `t`
@@ -117,7 +134,7 @@ def plot_MC_results(MC_output, plot_pars):
     ratio_Mw_filtered = Mw_out_closest_filtered / Mw_ODE_filtered
 
     # Plot the ratio from exclude_time second onward
-    plt.figure()
+    plt.figure(6)
     plt.plot(t_filtered, ratio_Mn_filtered, 'b-', label='Mn (MC) / Mn (ODE)')
     plt.plot(t_filtered, ratio_Mw_filtered, 'r-', label='Mw (MC) / Mw (ODE)')
     plt.xlabel('Time (s)')
@@ -125,19 +142,22 @@ def plot_MC_results(MC_output, plot_pars):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    plt.show(block=False)
     
     #* plot Mw_ODE 
-    plt.figure()
+    plt.figure(7)
     plt.plot(t, Mw_ODE, 'r.', label='M_w (ODE)')
     plt.plot(t, Mw_ODE_2, 'b-', label='M_w (ODE) 2')
     # plt.plot(t, Mw_ODE_3, 'g*', label='M_w (ODE) 3')
+    plt.show(block=False)
+
 
     plt.xlabel('Time (s)')
     plt.ylabel('Average molecular weight (kg/mol)')
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    plt.show(block=False)
 
     
-
     plt.show()

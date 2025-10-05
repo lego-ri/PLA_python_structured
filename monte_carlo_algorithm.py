@@ -115,7 +115,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         Rate[3] = k_de_MC * np.sum(R)           # Random scission (R)
         Rate[4] = k_de_MC * np.sum(D)           # Random scission (D)
         Rate[5] = k_de_MC * np.sum(G)           # Random scission (G)
-        Rate[6] = 0#k_te_MC * Rn * np.sum(D)      # "Active" transesterification (R+D)
+        Rate[6] = k_te_MC * Rn * np.sum(D)      # "Active" transesterification (R+D)
         Rate[7] = k_te_MC * Rn * np.sum(D)/Dn   # "Passive" transesterification (R+D), if Dn > 0 else 0
         Rate[8] = 2 * k_te_MC * Rn * np.sum(R) # "Active" transesterification (R+R)
         Rate[9] = 2 * k_te_MC * np.sum(R)      # "Passive" transesterification (R+R)
@@ -197,8 +197,8 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                 D_idx = np.argwhere(D>1)   # Indices of considered dormant chains values
                 R_idx = np.argwhere(R>0)   # Indices of all activee chains
                 if D_idx.size > 0:
-                    D_lengths = D[D_idx[:, 0], D_idx[:, 1]] # Lengths of active chains 
-                    D_probability = D_lengths/np.sum(D_lengths) # Probability of each active chain proportional to chain length
+                    D_lengths = D[D_idx[:, 0], D_idx[:, 1]] # Lengths of dormant chains 
+                    D_probability = D_lengths/np.sum(D_lengths) # Probability of each dormant chain proportional to chain length
                     D_idx_random = D_idx[np.random.choice(D_idx.shape[0], p=D_probability)] # Select random dormant chain
                     sub_len_D = np.random.randint(1, D[D_idx_random[0], D_idx_random[1]])    # Randomly select part of the chain
 
