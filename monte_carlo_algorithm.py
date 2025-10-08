@@ -108,11 +108,24 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         Dn = np.sum(D>0) # Dormant chains (branches)
         Gn = len(G) # Terminated chains
         
+        sumR = np.sum(R)  # Total number of monomer units in active chains
+        sumD = np.sum(D)  # Total number of monomer units in dormant chains
+        sumG = np.sum(G)  # Total number of monomer units in terminated chains
+        R_column_sums = np.sum(R, axis=0) # Lengths of all macromolecules (each column is a macromolecule with x branches(rows)) 
+        D_column_sums = np.sum(D, axis=0) # Lengths of all macromolecules (each column is a macromolecule with x branches(rows)) 
+        sumR2 = np.sum(R_column_sums**2)  # Sum of squared lengths of all macromolecules (2nd moment)
+        sumD2 = np.sum(D_column_sums**2)  # Sum of squared lengths of all macromolecules (2nd moment)
+        sumG2 = np.sum(G**2)              # Sum of squared lengths of all terminated chains (2nd moment)
+        sumR3 = np.sum(R_column_sums**3)  # Sum of cubed lengths of all macromolecules (3rd moment)
+        sumD3 = np.sum(D_column_sums**3)  # Sum of cubed lengths of all macromolecules (3rd moment)
+        sumG3 = np.sum(G**3)              # Sum of cubed lengths of all terminated chains (3rd moment)
+        
         #* Evaluate individual reaction rates
-        Rate[0] = k_p_MC * M_cur * Rn           # Propagation
-        Rate[1] = k_d_MC * Rn                   # Depropagation
-        Rate[2] = k_s_MC * Rn * Dn              # Chain transfer 
-        Rate[3] = k_de_MC * np.sum(R)           # Random scission (R)
+        Rate[0] = k_p_MC * (-M_cur * Rn + 2* M_cur * Rn + 4 * M_cur * (Rn + sumR))          # Propagation #* done
+        Rate[1] = k_d_MC * (Rn - 2* Rn + 4 * (Rn - sumR))                   # Depropagation #* done
+        Rate[2] = k_s_MC * (-sumR * Dn + sumD * Rn - sumR2 * Dn + sumD2 * Rn)             # Chain transfer #* done
+        Rate[3] = k_de_MC *(-1/2 * (sumR2-sumR) - 1/6 * (4*sumR3 - 3* sumR2 - sumR) - 1/2 * (sumD2 - sumD) - 1/6 * (4*sumD3 - 3* sumD2 - sumD) + sumR - Rn + sumD - Dn - sumG2 + sumG + 1/2 * (sumR2 - sumR) 
+                            + 1/2*(sumD2 - sumD) - 1/3 * (4*sumG3 - 3*sumG2 - sumG) + 1/6 * (2*sumR3 - 3*sumR2 + sumR) + 1/6 * (2*sumD3 - 3*sumD2 + sumD))           # Random scission (R)
         Rate[4] = k_de_MC * np.sum(D)           # Random scission (D)
         Rate[5] = k_de_MC * np.sum(G)           # Random scission (G)
         Rate[6] = k_te_MC * Rn * np.sum(D)      # "Active" transesterification (R+D)
