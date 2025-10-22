@@ -147,9 +147,9 @@ def plot_deterministic_results(solution, pars):
         
     #* plot transesterification rates only
     plt.figure()
-    plt.plot(t_h, R_te1/R_sum * 100, color=colors[5], label='Transesterification (active)', linestyle='-', linewidth=3)
-    plt.plot(t_h, R_te2/R_sum * 100, color=colors[6], label='Transesterification (dormant)', linestyle='--')
-    plt.plot(t_h, R_te3/R_sum * 100, color=colors[7], label='Transesterification (terminated)', linestyle=':')
+    plt.plot(t_h, R_te1/R_sum * 100, color=colors[5], label='Transesterification (R+R)', linestyle='-', linewidth=3)
+    plt.plot(t_h, R_te2/R_sum * 100, color=colors[6], label='Transesterification (R+D)', linestyle='--')
+    plt.plot(t_h, R_te3/R_sum * 100, color=colors[7], label='Transesterification (R+G)', linestyle=':')
     plt.xlim(0, max(t_h))  # Set x-axis limits
     plt.xlabel('Time (hours)')
     plt.ylabel('Relative reaction rate (%)')

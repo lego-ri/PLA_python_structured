@@ -27,7 +27,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         process_pars (array): 
             D_conc - concentration of dormant chains from the deterministic model main_process
             R_conc - concentration of active chains from the deterministic model main_process
-            ga0    - concentration of terminated chains from the deterministic model main_process
+            Gn    - concentration of terminated chains from the deterministic model main_process
             t      - time in simulation from deterministic model
 
             
@@ -47,7 +47,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     
     D_conc = process_pars[0]    # Concentration of dormant chains from the deterministic model main_process
     R_conc = process_pars[1]    # Concentration of active chains from the deterministic model main_process
-    ga0 = process_pars[2]       # Concentration of terminated chains from the deterministic model main_process
+    Gn = process_pars[2]       # Concentration of terminated chains from the deterministic model main_process
     t = process_pars[3]         # Time in simulation, s
     
     k_p = ModelPars.k_p
@@ -58,7 +58,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
        
     #* Monte carlo parameters   
     N_A = 6.022140858e23     # Avogadro number, 1/mol
-    V = Nx / (N_A*(D_conc + R_conc + ga0[-1]))        # Simulated volume, m3 #! terminated chains incl.
+    V = Nx / (N_A*(D_conc + R_conc + Gn[-1]))        # Simulated volume, m3 #! terminated chains incl.
     time_end = t[-1]
     MW = ModelPars.MW        # Molecular weight of lactoyl (monomer) group, kg/mol
     fq = 10                 # frequency for data logging
@@ -121,19 +121,18 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         sumG3 = np.sum(G**3)              # Sum of cubed lengths of all terminated chains (3rd moment)
         
         #* Evaluate individual reaction rates
-        Rate[0] = k_p_MC * (-M_cur * Rn + 2* M_cur * Rn + 4 * M_cur * (Rn + sumR))          # Propagation #* done
-        Rate[1] = k_d_MC * (Rn - 2* Rn + 4 * (Rn - sumR))                   # Depropagation #* done
-        Rate[2] = k_s_MC * (-sumR * Dn + sumD * Rn - sumR2 * Dn + sumD2 * Rn)             # Chain transfer #* done
-        Rate[3] = k_de_MC *(-1/2 * (sumR2-sumR) - 1/6 * (4*sumR3 - 3* sumR2 - sumR) - 1/2 * (sumD2 - sumD) - 1/6 * (4*sumD3 - 3* sumD2 - sumD) + sumR - Rn + sumD - Dn - sumG2 + sumG + 1/2 * (sumR2 - sumR) 
-                            + 1/2*(sumD2 - sumD) - 1/3 * (4*sumG3 - 3*sumG2 - sumG) + 1/6 * (2*sumR3 - 3*sumR2 + sumR) + 1/6 * (2*sumD3 - 3*sumD2 + sumD))           # Random scission (R)
-        Rate[4] = k_de_MC * np.sum(D)           # Random scission (D)
-        Rate[5] = k_de_MC * np.sum(G)           # Random scission (G)
-        Rate[6] = k_te_MC * Rn * np.sum(D)      # "Active" transesterification (R+D)
-        Rate[7] = k_te_MC * Rn * np.sum(D)/Dn   # "Passive" transesterification (R+D), if Dn > 0 else 0
-        Rate[8] = 2 * k_te_MC * Rn * np.sum(R) # "Active" transesterification (R+R)
-        Rate[9] = 2 * k_te_MC * np.sum(R)      # "Passive" transesterification (R+R)
-        Rate[10] = k_te_MC * Rn * np.sum(G)     # "Active" transesterification (R+G)
-        Rate[11] = k_te_MC * Rn * np.sum(G)/Gn  # "Passive" transesterification (R+G), if Gn > 0 else 0 
+        Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
+        Rate[1] = k_d_MC * Rn                   # Depropagation 
+        Rate[2] = k_s_MC * Rn * Dn           # Chain transfer 
+        Rate[3] = k_de_MC *sumR           # Random scission (R)
+        Rate[4] = k_de_MC * sumD           # Random scission (D)
+        Rate[5] = k_de_MC * sumG           # Random scission (G)
+        Rate[6] = k_te_MC * Rn * sumD      # "Active" transesterification (R+D)
+        Rate[7] = k_te_MC * Rn * sumD/Dn   # "Passive" transesterification (R+D), if Dn > 0 else 0
+        Rate[8] = 2 * k_te_MC * Rn * sumR # "Active" transesterification (R+R)
+        Rate[9] = 2 * k_te_MC * sumR      # "Passive" transesterification (R+R)
+        Rate[10] = k_te_MC * Rn * sumG     # "Active" transesterification (R+G)
+        Rate[11] = k_te_MC * Rn * sumG/Gn  # "Passive" transesterification (R+G), if Gn > 0 else 0 
 
         #* Select the reaction to happen (randomly weighted by reaction rates)
         Reac_idx = np.random.choice(reac_num, p=Rate/np.sum(Rate))    # inbuilt function that does the same as our custom sel_reac

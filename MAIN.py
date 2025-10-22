@@ -172,6 +172,7 @@ D, R, G, total_num_D_mol = build_matrixes_forMC(D0_composition, Nx, R_round, max
 # Pack parameters for the MC simulation
 mc_pars = [Nx, M, C, A, R, D, G, total_num_D_mol]
 
+
 # Run the MC simulation
 t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G = monte_carlo_algorithm(mc_pars, process_pars, ModelPars)
 

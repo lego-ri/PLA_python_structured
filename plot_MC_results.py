@@ -68,9 +68,22 @@ def plot_MC_results(MC_output, plot_pars):
     plt.grid(True)
     plt.tight_layout()
     plt.show(block=False)
+    
+     # Plot transesterification rates only
+    plt.figure(3)
+    sumRates = np.sum(Rates_out, axis=0) + small_number # axis=0 to sum over columns
+    plt.plot(t_out, Rates_out[6, :] / sumRates * 100)
+    plt.plot(t_out, Rates_out[7, :] / sumRates * 100)
+
+    plt.xlabel('Time (s)')  
+    plt.ylabel('Relative reaction rates (%)')
+    plt.legend(['Transesterification (R+D) active','Transesterification (R+D) passive'])
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show(block=False)
 
     # Plot chain concentrations
-    plt.figure(3)
+    plt.figure(4)
     plt.plot(t_out, R_out, label='Active branches')
     plt.plot(t_out, D_out, label='Dormant branches')
     plt.plot(t_out, G_out, label='Terminated branches')
@@ -83,7 +96,7 @@ def plot_MC_results(MC_output, plot_pars):
     plt.show(block=False)
 
     # Plot average molecular weights
-    plt.figure(4)
+    plt.figure(5)
     plt.plot(t_out, savgol_filter(Mn_out, 5, 3), 'b-', label='M_n (MC)')    # Smoothing the data using savgol_filter 
     plt.plot(t_out, savgol_filter(Mw_out, 5, 3), 'r-', label='M_w (MC)')
     plt.plot(t, Mn_ODE, 'b.', label='M_n (ODE)')
@@ -97,7 +110,7 @@ def plot_MC_results(MC_output, plot_pars):
 
 
     # Plot MWD (mlecular weight ddistribution)
-    plt.figure(5)
+    plt.figure(6)
     all_chains = MW*np.concatenate((RD_column_sums, G))
     logMW = np.log10(all_chains)
     plt.hist(logMW, bins=30)
@@ -134,7 +147,7 @@ def plot_MC_results(MC_output, plot_pars):
     ratio_Mw_filtered = Mw_out_closest_filtered / Mw_ODE_filtered
 
     # Plot the ratio from exclude_time second onward
-    plt.figure(6)
+    plt.figure(7)
     plt.plot(t_filtered, ratio_Mn_filtered, 'b-', label='Mn (MC) / Mn (ODE)')
     plt.plot(t_filtered, ratio_Mw_filtered, 'r-', label='Mw (MC) / Mw (ODE)')
     plt.xlabel('Time (s)')
@@ -145,7 +158,7 @@ def plot_MC_results(MC_output, plot_pars):
     plt.show(block=False)
     
     #* plot Mw_ODE 
-    plt.figure(7)
+    plt.figure(8)
     plt.plot(t, Mw_ODE, 'r.', label='M_w (ODE)')
     plt.plot(t, Mw_ODE_2, 'b-', label='M_w (ODE) 2')
     # plt.plot(t, Mw_ODE_3, 'g*', label='M_w (ODE) 3')
