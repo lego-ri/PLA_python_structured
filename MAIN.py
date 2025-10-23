@@ -4,7 +4,6 @@
                  2011, 50, 7927-7940
  by Alexandr Zubov, DTU Chemical Engineering
  Last update: 2025 by Richard Lego UCT Prague
- TEST GIT
 """
 
 #* Load necessary 3rd party modules and libraries 
@@ -161,7 +160,7 @@ eps_fraction = 1e-3                  # Margin for finding close fractions to the
 
 # Pack pars for Nx search
 Nx_pars = [min_Nx, max_Nx, max_difference_RD_dec_round, eps_fraction, max_branches] 
-process_pars = [D_conc, R_conc, ga0, t]
+process_pars = [D_conc, R_conc, ga0, t, y]
 
 # Find the optimal Nx
 D0_composition, Nx, D_round, R_round = find_Nx(D0_composition, Nx_pars, process_pars)

@@ -49,6 +49,20 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     R_conc = process_pars[1]    # Concentration of active chains from the deterministic model main_process
     Gn = process_pars[2]       # Concentration of terminated chains from the deterministic model main_process
     t = process_pars[3]         # Time in simulation, s
+    y = process_pars[4]         # Concentration profiles from the deterministic model main_process
+    # Assign the State variables 
+    M = y[0]     # Monomer concentration, mol/m3
+    C = y[1]     # Catalyst concentration, mol/m3
+    A = y[2]     # Acid concentration, mol/m3
+    la0 = y[3]   # 0th moment of active chains, mol/m3
+    la1 = y[4]   # 1st moment of active chains, mol/m3
+    la2 = y[5]   # 2nd moment of active chains, mol/m3
+    mu0 = y[6]   # 0th moment of dormant chains, mol/m3
+    mu1 = y[7]   # 1st moment of dormant chains, mol/m3
+    mu2 = y[8]   # 2nd moment of dormant chains, mol/m3
+    ga0 = y[9]   # 0th moment of terminated chains, mol/m3
+    ga1 = y[10]  # 1st moment of terminated chains, mol/m3
+    ga2 = y[11]  # 2nd moment of terminated chains, mol/m3    
     
     k_p = ModelPars.k_p
     k_d = ModelPars.k_d
@@ -98,6 +112,8 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     time_sim = 0                    # Reaction time in simulation, s (not time taken to simulate)
     Rate = np.zeros(reac_num)       # Initiate the vector of reaction rate
     case_counts = np.zeros(reac_num, dtype=int) # Initialize a counter array for the 12 cases
+    
+    step_counter = 0 #TODO
       
     while time_sim <= time_end:        
         # Get concentrations of non-polymeric (monomer) species from process ODE simulation
@@ -121,19 +137,48 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         sumG3 = np.sum(G**3)              # Sum of cubed lengths of all terminated chains (3rd moment)
         
         #* Evaluate individual reaction rates
-        Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
-        Rate[1] = k_d_MC * Rn                   # Depropagation 
-        Rate[2] = k_s_MC * Rn * Dn           # Chain transfer 
-        Rate[3] = k_de_MC *sumR           # Random scission (R)
-        Rate[4] = k_de_MC * sumD           # Random scission (D)
-        Rate[5] = k_de_MC * sumG           # Random scission (G)
-        Rate[6] = k_te_MC * Rn * sumD      # "Active" transesterification (R+D)
-        Rate[7] = k_te_MC * Rn * sumD/Dn   # "Passive" transesterification (R+D), if Dn > 0 else 0
-        Rate[8] = 2 * k_te_MC * Rn * sumR # "Active" transesterification (R+R)
-        Rate[9] = 2 * k_te_MC * sumR      # "Passive" transesterification (R+R)
-        Rate[10] = k_te_MC * Rn * sumG     # "Active" transesterification (R+G)
-        Rate[11] = k_te_MC * Rn * sumG/Gn  # "Passive" transesterification (R+G), if Gn > 0 else 0 
-
+#TODO
+        # Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
+        # Rate[1] = k_d_MC * Rn                   # Depropagation 
+        # Rate[2] = k_s_MC * Rn * Dn           # Chain transfer 
+        # Rate[3] = k_de_MC *sumR           # Random scission (R)
+        # Rate[4] = k_de_MC * sumD           # Random scission (D)
+        # Rate[5] = k_de_MC * sumG           # Random scission (G)
+        # Rate[6] = k_te_MC * Rn * sumD      # "Active" transesterification (R+D)
+        # Rate[7] = k_te_MC * Rn * sumD/Dn   # "Passive" transesterification (R+D), if Dn > 0 else 0
+        # Rate[8] = 2 * k_te_MC * Rn * sumR # "Active" transesterification (R+R)
+        # Rate[9] = 2 * k_te_MC * sumR      # "Passive" transesterification (R+R)
+        # Rate[10] = k_te_MC * Rn * sumG     # "Active" transesterification (R+G)
+        # Rate[11] = k_te_MC * Rn * sumG/Gn  # "Passive" transesterification (R+G), if Gn > 0 else 0 
+        # Find the closest indices in `t` for current time_sim`
+        current_t_idx = int(np.argmin(np.abs(t - time_sim)))
+        # Current (scalar) state values taken from ODE solution arrays
+        M_cur_det   = M[current_t_idx]         # Monomer concentration at current time
+        C_cur_det   = C[current_t_idx]         # Catalyst concentration at current time
+        A_cur_det   = A[current_t_idx]         # Acid concentration at current time
+        la0_cur_det = la0[current_t_idx]      # 0th moment of active chains, mol/m3
+        la1_cur_det = la1[current_t_idx]      # 1st moment of active chains, mol/m3
+        la2_cur_det = la2[current_t_idx]      # 2nd moment of active chains, mol/m3
+        mu0_cur_det = mu0[current_t_idx]      # 0th moment of dormant chains, mol/m3
+        mu1_cur_det = mu1[current_t_idx]      # 1st moment of dormant chains, mol/m3
+        mu2_cur_det = mu2[current_t_idx]      # 2nd moment of dormant chains, mol/m3
+        ga0_cur_det = ga0[current_t_idx]      # 0th moment of terminated chains, mol/m3
+        ga1_cur_det = ga1[current_t_idx]     # 1st moment of terminated chains, mol/m3
+        ga2_cur_det = ga2[current_t_idx]     # 2nd moment of terminated chains, mol/m3
+        
+        Rate[0] = k_p * M_cur * la0_cur_det         # Propagation 
+        Rate[1] = k_d * la0_cur_det                   # Depropagation 
+        Rate[2] = k_s * la0_cur_det * mu0_cur_det           # Chain transfer 
+        Rate[3] = k_de *la1_cur_det           # Random scission (R)
+        Rate[4] = k_de * mu1_cur_det           # Random scission (D)
+        Rate[5] = k_de * ga1_cur_det           # Random scission (G)
+        Rate[6] = k_te * la0_cur_det * mu1_cur_det      # "Active" transesterification (R+D)
+        Rate[7] = k_te * la0_cur_det * mu1_cur_det/mu0_cur_det   # "Passive" transesterification (R+D), if Dn > 0 else 0
+        Rate[8] = 2 * k_te * la0_cur_det * la1_cur_det # "Active" transesterification (R+R)
+        Rate[9] = 2 * k_te * la1_cur_det      # "Passive" transesterification (R+R)
+        Rate[10] = k_te * la0_cur_det * ga1_cur_det     # "Active" transesterification (R+G)
+        Rate[11] = k_te * la0_cur_det * ga1_cur_det/ga0_cur_det  # "Passive" transesterification (R+G), if Gn > 0 else 0 
+#TODO
         #* Select the reaction to happen (randomly weighted by reaction rates)
         Reac_idx = np.random.choice(reac_num, p=Rate/np.sum(Rate))    # inbuilt function that does the same as our custom sel_reac
         # Reac_idx = SelReac.sel_reac(Rate, reac_num)                     # Handmade function 
@@ -303,8 +348,9 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         #* Increment the elapsed time 
         tau = -np.log(np.random.random()) / np.sum(Rate)    # np.random.random() generates a random number between 0 and 1
         time_sim += tau                                     # Update elapsed time with the time increment
+        step_counter += 1 #TODO
         
-        #* Check the time taken to compute the simulation
+        #* Print the current time in simulation every 20 seconds of real time
         current_time = time() - start_time  # Gets the CPU time in seconds since the start of teh simulation
         if current_time > 20*current_time_counter:
             current_time_counter += 1
@@ -343,5 +389,6 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     #* End of simulation, evaluated time taken to simulate the process
     print(f"Total number of chains is Ntot={Ntot}, reactive branches Rn={Rn}, dormant branches Dn={Dn}, terminated chains G={Gn}")
     print(f"Number of times each reaction occured: {case_counts}")
+    print(f"Total number of steps in simulation: {step_counter}") #TODO
     
     return t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G
