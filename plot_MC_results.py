@@ -96,17 +96,17 @@ def plot_MC_results(MC_output, plot_pars):
     plt.show(block=False)
 
     # Plot average molecular weights
-    # plt.figure(5) 
-    # plt.plot(t_out, savgol_filter(Mn_out, 5, 3), 'b-', label='M_n (MC)')    # Smoothing the data using savgol_filter 
-    # plt.plot(t_out, savgol_filter(Mw_out, 5, 3), 'r-', label='M_w (MC)')
-    # plt.plot(t, Mn_ODE, 'b.', label='M_n (ODE)')
-    # plt.plot(t, Mw_ODE, 'r.', label='M_w (ODE)')
-    # plt.xlabel('Time (s)')
-    # plt.ylabel('Average molecular weight (kg/mol)')
-    # plt.legend()
-    # plt.grid(True)
-    # plt.tight_layout()
-    # plt.show(block=False)
+    plt.figure(5) 
+    plt.plot(t_out, savgol_filter(Mn_out, 5, 3), 'b-', label='M_n (MC)')    # Smoothing the data using savgol_filter 
+    plt.plot(t_out, savgol_filter(Mw_out, 5, 3), 'r-', label='M_w (MC)')
+    plt.plot(t, Mn_ODE, 'b.', label='M_n (ODE)')
+    plt.plot(t, Mw_ODE, 'r.', label='M_w (ODE)')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Average molecular weight (kg/mol)')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show(block=False)
 
 
     # Plot MWD (mlecular weight ddistribution)

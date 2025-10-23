@@ -153,20 +153,20 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         # Find the closest indices in `t` for current time_sim`
         current_t_idx = int(np.argmin(np.abs(t - time_sim)))
         # Current (scalar) state values taken from ODE solution arrays
-        M_cur_det   = M[current_t_idx]         # Monomer concentration at current time
-        C_cur_det   = C[current_t_idx]         # Catalyst concentration at current time
-        A_cur_det   = A[current_t_idx]         # Acid concentration at current time
-        la0_cur_det = la0[current_t_idx]      # 0th moment of active chains, mol/m3
-        la1_cur_det = la1[current_t_idx]      # 1st moment of active chains, mol/m3
-        la2_cur_det = la2[current_t_idx]      # 2nd moment of active chains, mol/m3
-        mu0_cur_det = mu0[current_t_idx]      # 0th moment of dormant chains, mol/m3
-        mu1_cur_det = mu1[current_t_idx]      # 1st moment of dormant chains, mol/m3
-        mu2_cur_det = mu2[current_t_idx]      # 2nd moment of dormant chains, mol/m3
-        ga0_cur_det = ga0[current_t_idx]      # 0th moment of terminated chains, mol/m3
-        ga1_cur_det = ga1[current_t_idx]     # 1st moment of terminated chains, mol/m3
-        ga2_cur_det = ga2[current_t_idx]     # 2nd moment of terminated chains, mol/m3
+        M_cur_det   = max(M[current_t_idx], 1e-7)        # Monomer concentration at current time
+        C_cur_det   = max(C[current_t_idx], 1e-7)        # Catalyst concentration at current time
+        A_cur_det   = max(A[current_t_idx], 1e-7)        # Acid concentration at current time
+        la0_cur_det = max(la0[current_t_idx], 1e-7)      # 0th moment of active chains, mol/m3
+        la1_cur_det = max(la1[current_t_idx], 1e-7)      # 1st moment of active chains, mol/m3
+        la2_cur_det = max(la2[current_t_idx], 1e-7)      # 2nd moment of active chains, mol/m3
+        mu0_cur_det = max(mu0[current_t_idx], 1e-7)      # 0th moment of dormant chains, mol/m3
+        mu1_cur_det = max(mu1[current_t_idx], 1e-7)      # 1st moment of dormant chains, mol/m3
+        mu2_cur_det = max(mu2[current_t_idx], 1e-7)      # 2nd moment of dormant chains, mol/m3
+        ga0_cur_det = max(ga0[current_t_idx], 1e-7)      # 0th moment of terminated chains, mol/m3
+        ga1_cur_det = max(ga1[current_t_idx], 1e-7)      # 1st moment of terminated chains, mol/m3
+        ga2_cur_det = max(ga2[current_t_idx], 1e-7)      # 2nd moment of terminated chains, mol/m3
         
-        Rate[0] = k_p * M_cur * la0_cur_det         # Propagation 
+        Rate[0] = k_p * M_cur_det * la0_cur_det         # Propagation 
         Rate[1] = k_d * la0_cur_det                   # Depropagation 
         Rate[2] = k_s * la0_cur_det * mu0_cur_det           # Chain transfer 
         Rate[3] = k_de *la1_cur_det           # Random scission (R)
@@ -178,7 +178,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         Rate[9] = 2 * k_te * la1_cur_det      # "Passive" transesterification (R+R)
         Rate[10] = k_te * la0_cur_det * ga1_cur_det     # "Active" transesterification (R+G)
         Rate[11] = k_te * la0_cur_det * ga1_cur_det/ga0_cur_det  # "Passive" transesterification (R+G), if Gn > 0 else 0 
-#TODO
+# TODO
         #* Select the reaction to happen (randomly weighted by reaction rates)
         Reac_idx = np.random.choice(reac_num, p=Rate/np.sum(Rate))    # inbuilt function that does the same as our custom sel_reac
         # Reac_idx = SelReac.sel_reac(Rate, reac_num)                     # Handmade function 
@@ -346,9 +346,15 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
 
 
         #* Increment the elapsed time 
-        tau = -np.log(np.random.random()) / np.sum(Rate)    # np.random.random() generates a random number between 0 and 1
+        # tau = -np.log(np.random.random()) / 477    # np.random.random() generates a random number between 0 and 1
+        sumRate = np.sum(Rate)
+        if sumRate <1:
+            sumRate = 10
+        tau = -np.log(np.random.random()) / sumRate#/10    # np.random.random() generates a random number between 0 and 1
+        # tau = -np.log(np.random.random()) / np.sum(Rate)    # np.random.random() generates a random number between 0 and 1
         time_sim += tau                                     # Update elapsed time with the time increment
         step_counter += 1 #TODO
+        # print(time_sim, tau, np.sum(Rate))
         
         #* Print the current time in simulation every 20 seconds of real time
         current_time = time() - start_time  # Gets the CPU time in seconds since the start of teh simulation
