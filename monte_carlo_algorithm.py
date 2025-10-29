@@ -302,10 +302,11 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars, det_results):
                     continue
 
         #* Increment the elapsed time 
-        tau = -np.log(np.random.random()) / np.sum(Rate)    # np.random.random() generates a random number between 0 and 1
+        #TODO:
+        tau = -np.log(np.random.random()) / np.sum(Rate)   # np.random.random() generates a random number between 0 and 1
         time_sim += tau                                     # Update elapsed time with the time 
         stepCounter += 1
-        # print(f"Time in simulation: {time_sim:.2f}, sumaRate={np.sum(Rate):.2e}, tau={tau:.2e}, reaction index={Reac_idx}")
+        print(f"Time in simulation: {time_sim:.2f}, sumaRate={np.sum(Rate):.2e}, tau={tau:.2e}, reaction index={Reac_idx}")
         
         #* Check the time taken to compute the simulation
         current_time = time() - start_time  # Gets the CPU time in seconds since the start of teh simulation
