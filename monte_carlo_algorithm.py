@@ -154,12 +154,12 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars, det_results):
         Rate[0] = k_p_MC * M_cur_det * la0_cur_det         # Propagation 
         Rate[1] = k_d_MC * la0_cur_det                   # Depropagation 
         Rate[2] = 2*k_s_MC * la0_cur_det * mu0_cur_det           # Chain transfer 
-        Rate[3] = k_de_MC * (la1_cur_det - la0_cur_det)           # Random scission (R)
-        Rate[4] = k_de_MC * (mu1_cur_det - mu0_cur_det)           # Random scission (D)
-        Rate[5] = k_de_MC * (ga1_cur_det - ga0_cur_det)           # Random scission (G)
-        Rate[6] = k_te_MC * (mu1_cur_det - mu0_cur_det) * la0_cur_det      # "Active" transesterification (R+D)
-        Rate[7] = k_te_MC * (la1_cur_det - la0_cur_det) * la0_cur_det      # "Active" transesterification (R+R)
-        Rate[8] = k_te_MC * (ga1_cur_det - ga0_cur_det) * la0_cur_det      # "Active" transesterification (R+G)
+        Rate[3] = max(k_de_MC * (la1_cur_det - la0_cur_det), 1e-7)           # Random scission (R)
+        Rate[4] = max(k_de_MC * (mu1_cur_det - mu0_cur_det), 1e-7)           # Random scission (D)
+        Rate[5] = max(k_de_MC * (ga1_cur_det - ga0_cur_det), 1e-7)           # Random scission (G)
+        Rate[6] = max(k_te_MC * (mu1_cur_det - mu0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+D)
+        Rate[7] = max(k_te_MC * (la1_cur_det - la0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+R)
+        Rate[8] = max(k_te_MC * (ga1_cur_det - ga0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+G)
 
         # Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
         # Rate[1] = k_d_MC * Rn                   # Depropagation 
