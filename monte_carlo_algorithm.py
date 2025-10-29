@@ -363,8 +363,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         if sumRate <1:
             input(f"Pausing since sumRate is very low: {sumRate:.2e}, stepcounter:{step_counter} press Enter to continue...")
             sumRate = 50
-        tau = -np.log(np.random.random()) / sumRate#/10    # np.random.random() generates a random number between 0 and 1
-        # tau = -np.log(np.random.random()) / np.sum(Rate)    # np.random.random() generates a random number between 0 and 1
+        tau = -np.log(np.random.random()) / sumRate    # np.random.random() generates a random number between 0 and 1
         time_sim += tau                                     # Update elapsed time with the time increment
         # print(time_sim, tau, np.sum(Rate))
         
