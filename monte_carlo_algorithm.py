@@ -98,7 +98,8 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     time_sim = 0                    # Reaction time in simulation, s (not time taken to simulate)
     Rate = np.zeros(reac_num)       # Initiate the vector of reaction rate
     case_counts = np.zeros(reac_num, dtype=int) # Initialize a counter array for the 12 cases
-      
+    stepCounter = 0 # Counter of steps taken in the simulation
+
     while time_sim <= time_end:        
         # Get concentrations of non-polymeric (monomer) species from process ODE simulation
         M_cur = M_fit(time_sim) # (cur~current concentration)
@@ -302,7 +303,9 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
 
         #* Increment the elapsed time 
         tau = -np.log(np.random.random()) / np.sum(Rate)    # np.random.random() generates a random number between 0 and 1
-        time_sim += tau                                     # Update elapsed time with the time increment
+        time_sim += tau   # Update elapsed time with the time increment
+        stepCounter += 1
+        # print(f"Time in simulation: {time_sim:.2f}, sumaRate={np.sum(Rate):.2e}, tau={tau:.2e}, reaction index={Reac_idx}")
         
         #* Check the time taken to compute the simulation
         current_time = time() - start_time  # Gets the CPU time in seconds since the start of teh simulation
@@ -343,5 +346,6 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     #* End of simulation, evaluated time taken to simulate the process
     print(f"Total number of chains is Ntot={Ntot}, reactive branches Rn={Rn}, dormant branches Dn={Dn}, terminated chains G={Gn}")
     print(f"Number of times each reaction occured: {case_counts}")
-    
+    print(f"Total simulation steps taken: {stepCounter}")
+
     return t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G

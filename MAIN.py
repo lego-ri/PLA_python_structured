@@ -135,7 +135,7 @@ print(f'Mw = {Mw_ODE[-1]:.2f} [kg/mol]')                 #  :.2f formats the num
 print(f'PDI = {Mw_ODE[-1] / Mn_ODE[-1]:.2f}')   # Polydispersity index ("Zp"), width of the distribution
 
 # Plot the results and save them to a .csv and .npy file
-plot_deterministic_results( solution, ModelPars )
+# plot_deterministic_results( solution, ModelPars ) #* Uncomment this line if you want to plot deterministic results
 
 
 #**************************************************************************************************************************
