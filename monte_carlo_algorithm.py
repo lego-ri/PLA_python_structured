@@ -76,7 +76,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     A_MC    = A  * N_A * V                          # Number of acid molecules, -
 
     #* Initiate vectors for output
-    reac_num  = 12              # Number of elementary reactions considered, used in random selection
+    reac_num  = 9              # Number of elementary reactions considered, used in random selection
     Rates_out = np.zeros(reac_num)  # The reaction rates
     R_out     = np.zeros(1)         # The active chains (radicals)
     D_out     = np.zeros(1)         # The dormant chains
@@ -98,6 +98,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     time_sim = 0                    # Reaction time in simulation, s (not time taken to simulate)
     Rate = np.zeros(reac_num)       # Initiate the vector of reaction rate
     case_counts = np.zeros(reac_num, dtype=int) # Initialize a counter array for the 12 cases
+    stepCounter = 0 # Counter of steps taken in the simulation
       
     while time_sim <= time_end:        
         # Get concentrations of non-polymeric (monomer) species from process ODE simulation
@@ -123,16 +124,22 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
         #* Evaluate individual reaction rates
         Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
         Rate[1] = k_d_MC * Rn                   # Depropagation 
-        Rate[2] = k_s_MC * Rn * Dn           # Chain transfer 
-        Rate[3] = k_de_MC *sumR           # Random scission (R)
-        Rate[4] = k_de_MC * sumD           # Random scission (D)
-        Rate[5] = k_de_MC * sumG           # Random scission (G)
-        Rate[6] = k_te_MC * Rn * sumD      # "Active" transesterification (R+D)
-        Rate[7] = k_te_MC * Rn * sumD/Dn   # "Passive" transesterification (R+D), if Dn > 0 else 0
-        Rate[8] = 2 * k_te_MC * Rn * sumR # "Active" transesterification (R+R)
-        Rate[9] = 2 * k_te_MC * sumR      # "Passive" transesterification (R+R)
-        Rate[10] = k_te_MC * Rn * sumG     # "Active" transesterification (R+G)
-        Rate[11] = k_te_MC * Rn * sumG/Gn  # "Passive" transesterification (R+G), if Gn > 0 else 0 
+        Rate[2] = 2*k_s_MC * Rn * Dn           # Chain transfer 
+        Rate[3] = k_de_MC * (sumR - Rn)           # Random scission (R)
+        Rate[4] = k_de_MC * (sumD - Dn)           # Random scission (D)
+        Rate[5] = k_de_MC * (sumG - Gn)           # Random scission (G)
+        Rate[6] = k_te_MC * (sumD - Dn) * Rn      # "Active" transesterification (R+D)
+        Rate[7] = k_te_MC * (sumR - Rn) * Rn      # "Active" transesterification (R+R)
+        Rate[8] = k_te_MC * (sumG - Gn) * Rn      # "Active" transesterification (R+G)
+        # Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
+        # Rate[1] = k_d_MC * Rn                   # Depropagation 
+        # Rate[2] = k_s_MC * Rn * Dn           # Chain transfer 
+        # Rate[3] = k_de_MC * Rn           # Random scission (R)
+        # Rate[4] = k_de_MC * Dn           # Random scission (D)
+        # Rate[5] = k_de_MC * Gn           # Random scission (G)
+        # Rate[6] = k_te_MC * Dn * Rn      # "Active" transesterification (R+D)
+        # Rate[7] = k_te_MC * Rn * Rn # "Active" transesterification (R+R)
+        # Rate[8] = k_te_MC * Gn * Rn     # "Active" transesterification (R+G)
 
         #* Select the reaction to happen (randomly weighted by reaction rates)
         Reac_idx = np.random.choice(reac_num, p=Rate/np.sum(Rate))    # inbuilt function that does the same as our custom sel_reac
@@ -221,21 +228,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     print("Active transesterification (R+D) chosen, but no dormant chain with length>1 available.\nsimulation ongoing...")
                     continue
 
-            case 7:  # "Passive" transesterification (R+D)
-                D_idx = np.argwhere(D>1)   # Indices of non NaN values
-                R_idx = np.argwhere(R>0)   # Indices of non NaN values
-                if D_idx.size > 0:
-                    D_idx_random = D_idx[np.random.choice(D_idx.shape[0])] # Select random dormant chain
-                    sub_len_D = np.random.randint(1, D[D_idx_random[0], D_idx_random[1]])    # Randomly select part of the chain
-
-                    R_idx_random = R_idx[np.random.choice(R_idx.shape[0])] # Select random active chain (radical)
-                    R[R_idx_random[0], R_idx_random[1]] += sub_len_D      # Add the selected chain part to the active chain
-                    D[D_idx_random[0], D_idx_random[1]] -= sub_len_D      # Remove the selected chain part from the dormant chain
-                else:
-                    print("Passive transesterification (R+D) chosen, but no dormant chain with length>1 available.\nsimulation ongoing...")
-                    continue
-
-            case 8:  # "Active" inter-transesterification (R+R)
+            case 7:  # "Active" inter-transesterification (R+R)
                 R_idx_1 = np.argwhere(R > 1)
                 if R_idx_1.size > 0:
                     R_lengths = R[R_idx_1[:,0], R_idx_1[:,1]] # Lengths of active chains
@@ -252,22 +245,7 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     print("Active transesterification (R+R) chosen, but no active chains with length>1 available\nsimulation ongoing...")
                     continue
 
-            case 9:  # "Passive" inter-transesterification (R+R)
-                R_indexes_1 = np.argwhere(R > 1)
-                if R_indexes_1.size > 0:
-                    R_idx_random_1 = R_indexes_1[np.random.choice(R_indexes_1.shape[0])] # Select first active chain based on probability
-                    
-                    R_idx_2 = np.argwhere(R > 0)
-                    R_indexes_2_filt = R_idx_2[~np.all(R_idx_2 == R_idx_random_1, axis=1)]
-                    R_idx_random_2 = R_indexes_2_filt[np.random.choice(R_indexes_2_filt.shape[0])] # Select second active chain based on probability                
-                    sub_len_R_1 = np.random.randint(1, R[R_idx_random_1[0], R_idx_random_1[1]])    # Randomly select part of the first chain
-                    R[R_idx_random_1[0], R_idx_random_1[1]] -= sub_len_R_1      # Remove the selected chain part from the first chain
-                    R[R_idx_random_2[0], R_idx_random_2[1]] += sub_len_R_1       # Add the selected chain part to the second chain
-                else:
-                    print("Passive transesterification (R+R) chosen, but no active chains with length>1 available\nsimulation ongoing...")
-                    continue
-
-            case 10:  # "Active" transesterification (R+G)
+            case 8:  # "Active" transesterification (R+G)
                 G_idx = np.argwhere(G > 1).flatten()
                 if G_idx.size > 0:
                     G_idx_random = np.random.choice(G_idx, p=G[G_idx]/np.sum(G[G_idx]))
@@ -283,26 +261,11 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
                     print("Active transesterification (R+G) chosen, but no terminated chains with length>1 available\nsimulation ongoing...")
                     continue
 
-            case 11:  # "Passive" transesterification (R+G)
-                G_idx = np.argwhere(G > 1).flatten()
-                if G_idx.size > 0:
-                    G_idx_ranom = np.random.choice(G_idx)
-                    DP_G = G[G_idx_ranom]
-                    DP_G_rnd = np.random.randint(1, DP_G)
-                                    
-                    R_idx = np.argwhere(R > 0)
-                    R_idx_random = R_idx[np.random.choice(R_idx.shape[0])] # Select random active chain (radical)
-
-                    R[R_idx_random[0], R_idx_random[1]] += DP_G_rnd
-                    G[G_idx_ranom] -= DP_G_rnd
-                else:
-                    print("Passive transesterification (R+G) chosen, but no terminated chains with length>1 available.")
-                    continue
-
-
         #* Increment the elapsed time 
         tau = -np.log(np.random.random()) / np.sum(Rate)    # np.random.random() generates a random number between 0 and 1
-        time_sim += tau                                     # Update elapsed time with the time increment
+        time_sim += tau                                     # Update elapsed time with the time 
+        stepCounter += 1
+        # print(f"Time in simulation: {time_sim:.2f}, sumaRate={np.sum(Rate):.2e}, tau={tau:.2e}, reaction index={Reac_idx}")
         
         #* Check the time taken to compute the simulation
         current_time = time() - start_time  # Gets the CPU time in seconds since the start of teh simulation
@@ -343,5 +306,6 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars):
     #* End of simulation, evaluated time taken to simulate the process
     print(f"Total number of chains is Ntot={Ntot}, reactive branches Rn={Rn}, dormant branches Dn={Dn}, terminated chains G={Gn}")
     print(f"Number of times each reaction occured: {case_counts}")
+    print(f"Total simulation steps taken: {stepCounter}")
     
     return t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G

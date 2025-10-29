@@ -40,11 +40,11 @@ def plot_MC_results(MC_output, plot_pars):
         if i < 6:
             plt.plot(t_out, Rates_out[i, :] / sumRates * 100)   # make it % by *100
         elif i == 6:
-            plt.plot(t_out, (Rates_out[6, :] + Rates_out[7, :]) / sumRates * 100)
+            plt.plot(t_out, Rates_out[6, :]  / sumRates * 100)
         elif i == 7:
-            plt.plot(t_out, (Rates_out[8, :] + Rates_out[9, :]) / sumRates * 100)
+            plt.plot(t_out, Rates_out[7, :]  / sumRates * 100)
         elif i == 9:
-            plt.plot(t_out, (Rates_out[10, :] + Rates_out[11, :]) / sumRates * 100)
+            plt.plot(t_out, Rates_out[8, :] / sumRates * 100)
 
     plt.xlabel('Time (s)')
     plt.ylabel('Relative reaction rates (%)')
@@ -59,9 +59,9 @@ def plot_MC_results(MC_output, plot_pars):
     # Plot transesterification rates only
     plt.figure(2)
     sumRates = np.sum(Rates_out, axis=0) + small_number # axis=0 to sum over columns
-    plt.plot(t_out, (Rates_out[6, :] + Rates_out[7, :]) / sumRates * 100)
-    plt.plot(t_out, (Rates_out[8, :] + Rates_out[9, :]) / sumRates * 100)
-    plt.plot(t_out, (Rates_out[10, :] + Rates_out[11, :]) / sumRates * 100)
+    plt.plot(t_out, (Rates_out[6, :] / sumRates * 100))
+    plt.plot(t_out, (Rates_out[7, :]  / sumRates * 100))
+    plt.plot(t_out, (Rates_out[8, :] / sumRates * 100))
     plt.xlabel('Time (s)')  
     plt.ylabel('Relative reaction rates (%)')
     plt.legend(['Transesterification (R+D)', 'Transesterification (R+R)', 'Transesterification (R+G)'])
