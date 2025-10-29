@@ -171,10 +171,11 @@ D, R, G, total_num_D_mol = build_matrixes_forMC(D0_composition, Nx, R_round, max
 #* Main MC simulation loop 
 # Pack parameters for the MC simulation
 mc_pars = [Nx, M, C, A, R, D, G, total_num_D_mol]
+det_results = y
 
 
 # Run the MC simulation
-t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G = monte_carlo_algorithm(mc_pars, process_pars, ModelPars)
+t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G = monte_carlo_algorithm(mc_pars, process_pars, ModelPars, det_results)
 
 #* Post processing
 # Pack MC results for plotting
