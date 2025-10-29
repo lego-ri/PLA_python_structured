@@ -36,7 +36,7 @@ def plot_MC_results(MC_output, plot_pars):
     # Plot reaction rates
     plt.figure(1)
     sumRates = np.sum(Rates_out, axis=0) + small_number # axis=0 to sum over columns
-    for i in range(9):
+    for i in range(10):
         if i < 6:
             plt.plot(t_out, Rates_out[i, :] / sumRates * 100)   # make it % by *100
         elif i == 6:
