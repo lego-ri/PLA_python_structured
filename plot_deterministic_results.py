@@ -74,6 +74,20 @@ def plot_deterministic_results(solution, pars):
     R_de2 = pars.k_de * mu0
     R_de3 = pars.k_de * ga0
     R_sum = R_a1 + R_a2 + R_p + R_d + R_s + R_te1 + R_te2 + R_te3 + R_de1 + R_de2 + R_de3
+    
+    # R_a1  = pars.k_a1 * C * mu0
+    # R_a2  = pars.k_a2 * A * la0
+    R_p_ODE   = pars.k_p  * la0 * M
+    R_d_ODE   = pars.k_d  * la0
+    R_s_ODE   = 2 * pars.k_s  * la0 * mu0
+    R_de1_ODE = pars.k_de * np.maximum(la1 - la0, 1e-7)
+    R_de2_ODE = pars.k_de * np.maximum(mu1 - mu0, 1e-7)
+    R_de3_ODE = pars.k_de * np.maximum(ga1 - ga0, 1e-7)
+    R_te1_ODE = pars.k_te * np.maximum((la1 - la0) * la0, 1e-7)
+    R_te2_ODE = pars.k_te * np.maximum((mu1 - mu0) * la0, 1e-7)
+    R_te3_ODE = pars.k_te * np.maximum((ga1 - ga0) * la0, 1e-7)
+    R_sum_ODE = R_p_ODE + R_d_ODE + R_s_ODE + R_te1_ODE + R_te2_ODE + R_te3_ODE + R_de1_ODE + R_de2_ODE + R_de3_ODE
+
 
     #* Plot conversion vs. time
     plt.figure()
@@ -117,24 +131,51 @@ def plot_deterministic_results(solution, pars):
     plt.grid(True)
     plt.show(block=False)
 
-    #* Plot relative reaction rates with improved readability
+    # #* Plot relative reaction rates with improved readability
+    # # plt.figure(figsize=(12, 6))  # Increase figure size for better visibility
+    # plt.figure()
+    # # Custom color palette
+    # colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', 
+    #           '#ffff33', '#a65628', '#f781bf', '#999999', '#66c2a5', '#fc8d62']
+
+    # plt.plot(t_h, R_a1  / R_sum * 100, color=colors[0], label='Catalyst activation', linestyle='-.', linewidth=3)
+    # plt.plot(t_h, R_a2  / R_sum * 100, color=colors[1], label='Catalyst deactivation', linestyle='--')
+    # plt.plot(t_h, R_p   / R_sum * 100, color=colors[2], label='Propagation', linestyle='--')
+    # plt.plot(t_h, R_d   / R_sum * 100, color=colors[3], label='Depropagation', linestyle='--')
+    # plt.plot(t_h, R_s   / R_sum * 100, color=colors[4], label='Chain transfer', linestyle='-.')
+    # plt.plot(t_h, R_te1 / R_sum * 100, color=colors[5], label='Transesterification (active)', linestyle='-', linewidth=3)
+    # plt.plot(t_h, R_te2 / R_sum * 100, color=colors[6], label='Transesterification (dormant)', linestyle='--')
+    # plt.plot(t_h, R_te3 / R_sum * 100, color=colors[7], label='Transesterification (terminated)', linestyle=':')
+    # plt.plot(t_h, R_de1 / R_sum * 100, color=colors[8], label='Chain scission (active)', linestyle='-.', linewidth=3)
+    # plt.plot(t_h, R_de2 / R_sum * 100, color=colors[9], label='Chain scission (dormant)', linestyle='--')
+    # plt.plot(t_h, R_de3 / R_sum * 100, color=colors[10], label='Chain scission (terminated)', linestyle=':')
+
+    # plt.xlim(0, max(t_h))  # Set x-axis limits
+    # plt.xlabel('Time (hours)')
+    # plt.ylabel('Relative reaction rate (%)')
+    # # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')  # Move legend outside the plot
+    # plt.legend(loc='best')
+    # plt.grid(True)
+    # plt.tight_layout()  # Adjust layout to prevent clipping
+    # plt.show(block=False)    
+    
+        #* Plot relative reaction rates with improved readability - COMPARE WITH MC!!!!
     # plt.figure(figsize=(12, 6))  # Increase figure size for better visibility
     plt.figure()
     # Custom color palette
     colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', 
               '#ffff33', '#a65628', '#f781bf', '#999999', '#66c2a5', '#fc8d62']
 
-    plt.plot(t_h, R_a1  / R_sum * 100, color=colors[0], label='Catalyst activation', linestyle='-.', linewidth=3)
-    plt.plot(t_h, R_a2  / R_sum * 100, color=colors[1], label='Catalyst deactivation', linestyle='--')
-    plt.plot(t_h, R_p   / R_sum * 100, color=colors[2], label='Propagation', linestyle='--')
-    plt.plot(t_h, R_d   / R_sum * 100, color=colors[3], label='Depropagation', linestyle='--')
-    plt.plot(t_h, R_s   / R_sum * 100, color=colors[4], label='Chain transfer', linestyle='-.')
-    plt.plot(t_h, R_te1 / R_sum * 100, color=colors[5], label='Transesterification (active)', linestyle='-', linewidth=3)
-    plt.plot(t_h, R_te2 / R_sum * 100, color=colors[6], label='Transesterification (dormant)', linestyle='--')
-    plt.plot(t_h, R_te3 / R_sum * 100, color=colors[7], label='Transesterification (terminated)', linestyle=':')
-    plt.plot(t_h, R_de1 / R_sum * 100, color=colors[8], label='Chain scission (active)', linestyle='-.', linewidth=3)
-    plt.plot(t_h, R_de2 / R_sum * 100, color=colors[9], label='Chain scission (dormant)', linestyle='--')
-    plt.plot(t_h, R_de3 / R_sum * 100, color=colors[10], label='Chain scission (terminated)', linestyle=':')
+
+    plt.plot(t_h, R_p_ODE / R_sum_ODE * 100, color=colors[0], label='Propagation', linestyle='--')
+    plt.plot(t_h, R_d_ODE / R_sum_ODE * 100, color=colors[1], label='Depropagation', linestyle='--')
+    plt.plot(t_h, R_s_ODE / R_sum_ODE * 100, color=colors[2], label='Chain transfer', linestyle='-.')
+    plt.plot(t_h, R_te1_ODE / R_sum_ODE * 100, color=colors[3], label='Transesterification (active)', linestyle='-', linewidth=3)
+    plt.plot(t_h, R_te2_ODE / R_sum_ODE * 100, color=colors[4], label='Transesterification (dormant)', linestyle='--')
+    plt.plot(t_h, R_te3_ODE / R_sum_ODE * 100, color=colors[5], label='Transesterification (terminated)', linestyle=':')
+    plt.plot(t_h, R_de1_ODE / R_sum_ODE * 100, color=colors[6], label='Chain scission (active)', linestyle='-.', linewidth=3)
+    plt.plot(t_h, R_de2_ODE / R_sum_ODE * 100, color=colors[7], label='Chain scission (dormant)', linestyle='--')
+    plt.plot(t_h, R_de3_ODE / R_sum_ODE * 100, color=colors[8], label='Chain scission (terminated)', linestyle=':')
 
     plt.xlim(0, max(t_h))  # Set x-axis limits
     plt.xlabel('Time (hours)')
@@ -144,6 +185,7 @@ def plot_deterministic_results(solution, pars):
     plt.grid(True)
     plt.tight_layout()  # Adjust layout to prevent clipping
     plt.show(block=False)    
+
         
     #* plot transesterification rates only
     plt.figure()

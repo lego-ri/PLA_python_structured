@@ -125,62 +125,58 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars, det_results):
     case_counts = np.zeros(reac_num, dtype=int) # Initialize a counter array for the 12 cases
     stepCounter = 0 # Counter of steps taken in the simulation
       
+    #* Get concentrations (numbers) of polymer chains
+    Rn = np.sum(R>0) # Active chains (branches)
+    Dn = np.sum(D>0) # Dormant chains (branches)
+    
     while time_sim <= time_end:        
         # Get concentrations of non-polymeric (monomer) species from process ODE simulation
         M_cur = M_fit(time_sim) # (cur~current concentration)
 
-        #* Get concentrations (numbers) of polymer chains
-        Rn = np.sum(R>0) # Active chains (branches)
-        Dn = np.sum(D>0) # Dormant chains (branches)
         Gn = len(G) # Terminated chains
         
-        sumR = np.sum(R)  # Total number of monomer units in active chains
-        sumD = np.sum(D)  # Total number of monomer units in dormant chains
-        sumG = np.sum(G)  # Total number of monomer units in terminated chains
-        R_column_sums = np.sum(R, axis=0) # Lengths of all macromolecules (each column is a macromolecule with x branches(rows)) 
-        D_column_sums = np.sum(D, axis=0) # Lengths of all macromolecules (each column is a macromolecule with x branches(rows)) 
-        sumR2 = np.sum(R_column_sums**2)  # Sum of squared lengths of all macromolecules (2nd moment)
-        sumD2 = np.sum(D_column_sums**2)  # Sum of squared lengths of all macromolecules (2nd moment)
-        sumG2 = np.sum(G**2)              # Sum of squared lengths of all terminated chains (2nd moment)
-        sumR3 = np.sum(R_column_sums**3)  # Sum of cubed lengths of all macromolecules (3rd moment)
-        sumD3 = np.sum(D_column_sums**3)  # Sum of cubed lengths of all macromolecules (3rd moment)
-        sumG3 = np.sum(G**3)              # Sum of cubed lengths of all terminated chains (3rd moment)
+        sumR = np.sum(R)  # Total length of all monomer units in active chains
+        sumD = np.sum(D)  # Total length of all monomer units in dormant chains
+        sumG = np.sum(G)  # Total length of all monomer units in terminated chains
         
-        current_t_idx = int(np.argmin(np.abs(t - time_sim)))
-        # Current (scalar) state values taken from ODE solution arrays
-        M_cur_det   = max(M_MC[current_t_idx], 1e-7)        # Monomer concentration at current time
-        C_cur_det   = max(C_MC[current_t_idx], 1e-7)        # Catalyst concentration at current time
-        A_cur_det   = max(A_MC[current_t_idx], 1e-7)        # Acid concentration at current time
-        la0_cur_det = max(la0_MC[current_t_idx], 1e-7)      # 0th moment of active chains, mol/m3
-        la1_cur_det = max(la1_MC[current_t_idx], 1e-7)      # 1st moment of active chains, mol/m3
-        la2_cur_det = max(la2_MC[current_t_idx], 1e-7)      # 2nd moment of active chains, mol/m3
-        mu0_cur_det = max(mu0_MC[current_t_idx], 1e-7)      # 0th moment of dormant chains, mol/m3
-        mu1_cur_det = max(mu1_MC[current_t_idx], 1e-7)      # 1st moment of dormant chains, mol/m3
-        mu2_cur_det = max(mu2_MC[current_t_idx], 1e-7)      # 2nd moment of dormant chains, mol/m3
-        ga0_cur_det = max(ga0_MC[current_t_idx], 1e-7)      # 0th moment of terminated chains, mol/m3
-        ga1_cur_det = max(ga1_MC[current_t_idx], 1e-7)      # 1st moment of terminated chains, mol/m3
-        ga2_cur_det = max(ga2_MC[current_t_idx], 1e-7)      # 2nd moment of terminated chains, mol/m3
-        #* Evaluate individual reaction rates        
-        Rate[0] = k_p_MC * M_cur_det * la0_cur_det         # Propagation 
-        Rate[1] = k_d_MC * la0_cur_det                   # Depropagation 
-        Rate[2] = 2*k_s_MC * la0_cur_det * mu0_cur_det           # Chain transfer 
-        Rate[3] = max(k_de_MC * (la1_cur_det - la0_cur_det), 1e-7)           # Random scission (R)
-        Rate[4] = max(k_de_MC * (mu1_cur_det - mu0_cur_det), 1e-7)           # Random scission (D)
-        Rate[5] = max(k_de_MC * (ga1_cur_det - ga0_cur_det), 1e-7)           # Random scission (G)
-        Rate[6] = max(k_te_MC * (mu1_cur_det - mu0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+D)
-        Rate[7] = max(k_te_MC * (la1_cur_det - la0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+R)
-        Rate[8] = max(k_te_MC * (ga1_cur_det - ga0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+G)
+        #* Evaluate individual reaction rates 
+        #* rates from ODE       
+        # current_t_idx = np.searchsorted(t, time_sim) # For each time_sim look for the closest value in t
+        ## Current (scalar) state values taken from ODE solution arrays
+        # M_cur_det   = max(M_MC[current_t_idx], 1e-7)        # Monomer concentration at current time
+        # C_cur_det   = max(C_MC[current_t_idx], 1e-7)        # Catalyst concentration at current time
+        # A_cur_det   = max(A_MC[current_t_idx], 1e-7)        # Acid concentration at current time
+        # la0_cur_det = max(la0_MC[current_t_idx], 1e-7)      # 0th moment of active chains, mol/m3
+        # la1_cur_det = max(la1_MC[current_t_idx], 1e-7)      # 1st moment of active chains, mol/m3
+        # la2_cur_det = max(la2_MC[current_t_idx], 1e-7)      # 2nd moment of active chains, mol/m3
+        # mu0_cur_det = max(mu0_MC[current_t_idx], 1e-7)      # 0th moment of dormant chains, mol/m3
+        # mu1_cur_det = max(mu1_MC[current_t_idx], 1e-7)      # 1st moment of dormant chains, mol/m3
+        # mu2_cur_det = max(mu2_MC[current_t_idx], 1e-7)      # 2nd moment of dormant chains, mol/m3
+        # ga0_cur_det = max(ga0_MC[current_t_idx], 1e-7)      # 0th moment of terminated chains, mol/m3
+        # ga1_cur_det = max(ga1_MC[current_t_idx], 1e-7)      # 1st moment of terminated chains, mol/m3
+        # ga2_cur_det = max(ga2_MC[current_t_idx], 1e-7)      # 2nd moment of terminated chains, mol/m3
+        # Rate[0] = k_p_MC * M_cur_det * la0_cur_det         # Propagation 
+        # Rate[1] = k_d_MC * la0_cur_det                   # Depropagation 
+        # Rate[2] = 2*k_s_MC * la0_cur_det * mu0_cur_det           # Chain transfer 
+        # Rate[3] = max(k_de_MC * (la1_cur_det - la0_cur_det), 1e-7)           # Random scission (R)
+        # Rate[4] = max(k_de_MC * (mu1_cur_det - mu0_cur_det), 1e-7)           # Random scission (D)
+        # Rate[5] = max(k_de_MC * (ga1_cur_det - ga0_cur_det), 1e-7)           # Random scission (G)
+        # Rate[6] = max(k_te_MC * (mu1_cur_det - mu0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+D)
+        # Rate[7] = max(k_te_MC * (la1_cur_det - la0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+R)
+        # Rate[8] = max(k_te_MC * (ga1_cur_det - ga0_cur_det) * la0_cur_det, 1e-7)      # "Active" transesterification (R+G)
 
-        # Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
-        # Rate[1] = k_d_MC * Rn                   # Depropagation 
-        # Rate[2] = 2*k_s_MC * Rn * Dn           # Chain transfer 
-        # Rate[3] = k_de_MC * (sumR - Rn)           # Random scission (R)
-        # Rate[4] = k_de_MC * (sumD - Dn)           # Random scission (D)
-        # Rate[5] = k_de_MC * (sumG - Gn)           # Random scission (G)
-        # Rate[6] = k_te_MC * (sumD - Dn) * Rn      # "Active" transesterification (R+D)
-        # Rate[7] = k_te_MC * (sumR - Rn) * Rn      # "Active" transesterification (R+R)
-        # Rate[8] = k_te_MC * (sumG - Gn) * Rn      # "Active" transesterification (R+G)
+        #* rates from MC
+        Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
+        Rate[1] = k_d_MC * Rn                   # Depropagation 
+        Rate[2] = 2*k_s_MC * Rn * Dn           # Chain transfer 
+        Rate[3] = k_de_MC * (sumR - Rn)           # Random scission (R)
+        Rate[4] = k_de_MC * (sumD - Dn)           # Random scission (D)
+        Rate[5] = k_de_MC * (sumG - Gn)           # Random scission (G)
+        Rate[6] = k_te_MC * (sumD - Dn) * Rn      # "Active" transesterification (R+D)
+        Rate[7] = k_te_MC * (sumR - Rn) * Rn      # "Active" transesterification (R+R)
+        Rate[8] = k_te_MC * (sumG - Gn) * Rn      # "Active" transesterification (R+G)
 
+        #* OLD, do not use:
         # Rate[0] = k_p_MC * M_cur * Rn         # Propagation 
         # Rate[1] = k_d_MC * Rn                   # Depropagation 
         # Rate[2] = k_s_MC * Rn * Dn           # Chain transfer 
@@ -341,6 +337,9 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars, det_results):
             #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # Combine the matrixes of dormant and active branches into one matrix of all species except for terminated chains
             R_and_D = np.where(D<1, R, D)
+            # R_and_D_check = D + R
+            # if not np.array_equal(R_and_D, R_and_D_check):
+            #     raise RuntimeError("R_and_D and R_and_D_check are not equal; aborting simulation")
             
             # calculate the number or elements in R_and_D
             #Ntot = R_and_D.shape[1] + Gn            # Total number of branches 
@@ -363,4 +362,4 @@ def monte_carlo_algorithm(mc_pars, process_pars, ModelPars, det_results):
     print(f"Number of times each reaction occured: {case_counts}")
     print(f"Total simulation steps taken: {stepCounter}")
     
-    return t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G
+    return t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, R, D, G, out_idx

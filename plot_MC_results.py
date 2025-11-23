@@ -161,7 +161,7 @@ def plot_MC_results(MC_output, plot_pars):
     plt.figure(8)
     plt.plot(t, Mw_ODE, 'r.', label='M_w (ODE)')
     plt.plot(t, Mw_ODE_2, 'b-', label='M_w (ODE) 2')
-    # plt.plot(t, Mw_ODE_3, 'g*', label='M_w (ODE) 3')
+    plt.plot(t, Mw_ODE_3, 'g*', label='M_w (ODE) 3')
     plt.show(block=False)
 
 
@@ -171,6 +171,20 @@ def plot_MC_results(MC_output, plot_pars):
     plt.grid(True)
     plt.tight_layout()
     plt.show(block=False)
+    
+    # Plot average molecular weights without smoothing
+    plt.figure(9)
+    plt.plot(t_out, Mn_out, 'b-', label='M_n (MC, raw)')
+    plt.plot(t_out, Mw_out, 'r-', label='M_w (MC, raw)')
+    plt.plot(t, Mn_ODE, 'b.', label='M_n (ODE)')
+    plt.plot(t, Mw_ODE, 'r.', label='M_w (ODE)')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Average molecular weight (kg/mol)')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show(block=False)
+
 
     
     plt.show()
