@@ -185,6 +185,46 @@ def plot_MC_results(MC_output, plot_pars):
     plt.tight_layout()
     plt.show(block=False)
 
+    # ===============================================================
+    # NEW FIGURE: Compare MW_ODE_4 / Mn_ODE with MC results
+    # ===============================================================
+
+    Mw_ODE_4 = plot_pars[5]   # <- new input
+
+    # Plot MC vs deterministic including MW_ODE_4
+    plt.figure(10)
+    plt.plot(t_out, savgol_filter(Mn_out, 5, 3), 'b-', label='M_n (MC)')
+    plt.plot(t_out, savgol_filter(Mw_out, 5, 3), 'r-', label='M_w (MC)')
+    
+    plt.plot(t, Mn_ODE, 'b.', markersize=4, label='M_n (ODE)')
+    plt.plot(t, Mw_ODE_4, 'm.', markersize=4, label='M_w (ODE_4, branched correct)')
+    
+    plt.xlabel('Time (s)')
+    plt.ylabel('Average molecular weight (kg/mol)')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show(block=False)
+
+    # ===============================================================
+    # NEW FIGURE: direct side-by-side Mn + Mw for MC vs ODE_4
+    # ===============================================================
+    plt.figure(11)
+
+    # MC
+    plt.plot(t_out, Mn_out, 'b-', alpha=0.6, label='M_n (MC)')
+    plt.plot(t_out, Mw_out, 'r-', alpha=0.6, label='M_w (MC)')
+
+    # ODE
+    plt.plot(t, Mn_ODE, 'b.', markersize=4, label='M_n (ODE)')
+    plt.plot(t, Mw_ODE_4, 'm.', markersize=4, label='M_w (ODE_4)')
+
+    plt.xlabel('Time (s)')
+    plt.ylabel('Average molecular weight (kg/mol)')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show(block=False)
 
     
     plt.show()

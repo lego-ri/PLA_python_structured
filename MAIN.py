@@ -33,7 +33,7 @@ D0_composition = np.zeros(max_branches)
 
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
-D0_composition[0]      = 0.5#0.15                               # Fraction of chains (branches) in linear cocatalysts
+D0_composition[0]      = 0.8#0.15                               # Fraction of chains (branches) in linear cocatalysts
 D0_composition[1]      = 0#0.33                               # Fraction of chains in cocatalysts with 2 branches
 # D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
 #TODO#######################################################################################################################
@@ -93,7 +93,7 @@ def solve_ode_system():
 
 solution = solve_ode_system() # Solve the ODE system
 
-#* Deterministic model - post processing
+#* Deterministic model - solution
 # Extract results from the main_process
 t = solution.t  # Reaction time, s
 y = solution.y  # All the state variables at each time step t
@@ -112,6 +112,7 @@ ga0 = y[9]   # 0th moment of terminated chains, mol/m3
 ga1 = y[10]  # 1st moment of terminated chains, mol/m3
 ga2 = y[11]  # 2nd moment of terminated chains, mol/m3
 
+#* Deterministic model - post processing
 # Conversion of monomer (%)
 conv = (M0 - M) / M0 * 100
 
@@ -132,8 +133,47 @@ print(f'Conversion = {conv[-1]:.2f} [%]')           # [-1] is the last element o
 print(f'Mw = {Mw_ODE[-1]:.2f} [kg/mol]')                 #  :.2f formats the number to 2 decimal places
 print(f'PDI = {Mw_ODE[-1] / Mn_ODE[-1]:.2f}')   # Polydispersity index ("Zp"), width of the distribution
 
-# Plot the results and save them to a .csv and .npy file
-# plot_deterministic_results( solution, ModelPars )
+#*************************************************************************************************************
+# ===================================================================
+# Correct MW for branched initiator distribution → MW_ODE_4
+# ===================================================================
+
+# --- Chain-level totals
+N_chains = la0 + mu0 + ga0      # total number of chains
+S1 = la1 + mu1 + ga1            # sum of chain lengths
+S2 = la2 + mu2 + ga2            # sum of squared chain lengths
+
+# Prevent division by zero
+eps = 1e-30
+N_chains_safe = np.where(N_chains > 0, N_chains, eps)
+
+# --- Per-chain (branch) moments
+m1 = S1 / N_chains_safe
+m2 = S2 / N_chains_safe
+
+# --- Functionality distribution p(f)
+p = np.array(D0_composition, dtype=float)
+p = p / np.sum(p)       # normalize to probability distribution
+f = np.arange(len(p))   # f = 0,1,2,3,... functionality index
+
+# Average functionality
+f_avg = np.sum(p * f)
+
+# Second factorial moment E[f(f-1)]
+E_f_f1 = np.sum(p * f * (f - 1))
+
+# --- Molecular (macromolecule) moments per molecule
+mu1_mol = f_avg * m1
+mu2_mol = f_avg * m2 + (m1**2) * E_f_f1
+
+# --- Weight-average DP per molecule
+DP_w_mol = mu2_mol / mu1_mol
+
+# --- Convert DP_w to Mw
+MW_ODE_4 = ModelPars.MW * DP_w_mol
+
+print(f'Mw_ODE_4 = {MW_ODE_4[-1]:.2f} [kg/mol]')
+print(f'PDI_ODE_4 = {MW_ODE_4[-1] / Mn_ODE[-1]:.2f}')
 
 
 #**************************************************************************************************************************
@@ -180,7 +220,7 @@ t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sum
 #* Post processing MC
 # Pack MC results for plotting
 MC_output = [t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, G]
-plot_pars = [t, Mn_ODE, Mw_ODE,Mw_ODE_2,Mw_ODE_3]
+plot_pars = [t, Mn_ODE, Mw_ODE, Mw_ODE_2, Mw_ODE_3, MW_ODE_4]
 
 # Plotting
 plot = plot_MC_results(MC_output, plot_pars)
