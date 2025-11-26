@@ -26,6 +26,9 @@ def plot_MC_results(MC_output, plot_pars):
     Mw_ODE = plot_pars[2]
     Mw_ODE_2 = plot_pars[3]
     Mw_ODE_3 = plot_pars[4]
+    Mw_ODE_4 = plot_pars[5]   # <- new input
+    Mn_ODE_4 = plot_pars[6]   # <- new input
+
   
     MW = ModelPars.MW        # Molecular weight of lactoyl (monomer) group, kg/mol
     
@@ -189,7 +192,6 @@ def plot_MC_results(MC_output, plot_pars):
     # NEW FIGURE: Compare MW_ODE_4 / Mn_ODE with MC results
     # ===============================================================
 
-    Mw_ODE_4 = plot_pars[5]   # <- new input
 
     # Plot MC vs deterministic including MW_ODE_4
     plt.figure(10)
@@ -216,7 +218,7 @@ def plot_MC_results(MC_output, plot_pars):
     plt.plot(t_out, Mw_out, 'r-', alpha=0.6, label='M_w (MC)')
 
     # ODE
-    plt.plot(t, Mn_ODE, 'b.', markersize=4, label='M_n (ODE)')
+    plt.plot(t, Mn_ODE_4, 'b.', markersize=4, label='M_n (ODE_4)')
     plt.plot(t, Mw_ODE_4, 'm.', markersize=4, label='M_w (ODE_4)')
 
     plt.xlabel('Time (s)')

@@ -33,7 +33,7 @@ D0_composition = np.zeros(max_branches)
 
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
-D0_composition[0]      = 0.8#0.15                               # Fraction of chains (branches) in linear cocatalysts
+D0_composition[0]      = 0.2#0.15                               # Fraction of chains (branches) in linear cocatalysts
 D0_composition[1]      = 0#0.33                               # Fraction of chains in cocatalysts with 2 branches
 # D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
 #TODO#######################################################################################################################
@@ -134,43 +134,70 @@ print(f'Mw = {Mw_ODE[-1]:.2f} [kg/mol]')                 #  :.2f formats the num
 print(f'PDI = {Mw_ODE[-1] / Mn_ODE[-1]:.2f}')   # Polydispersity index ("Zp"), width of the distribution
 
 #*************************************************************************************************************
-# ===================================================================
-# Correct MW for branched initiator distribution → MW_ODE_4
-# ===================================================================
+# === Compute exact molecular Mn and Mw under the stated assumptions ===
+# Inputs assumed present: la0, la1, la2, mu0, mu1, mu2, ga0, ga1, ga2 (arrays), 
+#                        D0_composition (array), ModelPars.MW
 
-# --- Chain-level totals
-N_chains = la0 + mu0 + ga0      # total number of chains
-S1 = la1 + mu1 + ga1            # sum of chain lengths
-S2 = la2 + mu2 + ga2            # sum of squared chain lengths
-
-# Prevent division by zero
 eps = 1e-30
-N_chains_safe = np.where(N_chains > 0, N_chains, eps)
 
-# --- Per-chain (branch) moments
-m1 = S1 / N_chains_safe
-m2 = S2 / N_chains_safe
+# Attached branches (on initiators): la + mu
+N_att = la0 + mu0            # number of attached branches per vol
+S1_att = la1 + mu1
+S2_att = la2 + mu2
 
-# --- Functionality distribution p(f)
+# Detached terminated single-arm molecules
+N_g = ga0
+S1_g = ga1
+S2_g = ga2
+
+# per-attached-branch moments (safe)
+N_att_safe = np.where(N_att > 0, N_att, eps)
+m1_att = S1_att / N_att_safe
+m2_att = S2_att / N_att_safe
+
+# per-detached-molecule moments (ga are single-arm molecules)
+N_g_safe = np.where(N_g > 0, N_g, eps)
+m1_g = np.where(N_g > 0, S1_g / N_g_safe, 0.0)
+m2_g = np.where(N_g > 0, S2_g / N_g_safe, 0.0)
+
+# functionality distribution (attached molecules)
 p = np.array(D0_composition, dtype=float)
-p = p / np.sum(p)       # normalize to probability distribution
-f = np.arange(len(p))   # f = 0,1,2,3,... functionality index
+p_sum = p.sum()
+if p_sum <= 0:
+    raise ValueError("D0_composition must sum to >0")
+p = p / p_sum
+f = np.arange(len(p))
 
-# Average functionality
-f_avg = np.sum(p * f)
+f_avg = float(np.sum(p * f))
+E_ff1 = float(np.sum(p * f * (f - 1)))
 
-# Second factorial moment E[f(f-1)]
-E_f_f1 = np.sum(p * f * (f - 1))
+if f_avg <= 0:
+    raise ValueError("Average functionality <= 0; check D0_composition")
 
-# --- Molecular (macromolecule) moments per molecule
-mu1_mol = f_avg * m1
-mu2_mol = f_avg * m2 + (m1**2) * E_f_f1
+# Number concentration of attached macromolecules (per volume)
+N_mol_att = N_att / f_avg    # vector
 
-# --- Weight-average DP per molecule
-DP_w_mol = mu2_mol / mu1_mol
+# per-attached-molecule moments (per molecule)
+mu1_mol_att = f_avg * m1_att
+mu2_mol_att = f_avg * m2_att + (m1_att**2) * E_ff1
 
-# --- Convert DP_w to Mw
-MW_ODE_4 = ModelPars.MW * DP_w_mol
+# Total molecular counts and moments per volume
+N_mol_total = N_mol_att + N_g
+S1_mol_total = N_mol_att * mu1_mol_att + S1_g
+S2_mol_total = N_mol_att * mu2_mol_att + S2_g
+
+# Safe divisions
+N_mol_total_safe = np.where(N_mol_total > 0, N_mol_total, eps)
+S1_mol_total_safe = np.where(S1_mol_total > 0, S1_mol_total, eps)
+
+# DP_n and DP_w
+DP_n = S1_mol_total / N_mol_total_safe
+DP_w = S2_mol_total / S1_mol_total_safe
+
+# Mn and Mw (in same units as ModelPars.MW)
+MN_ODE_4 = ModelPars.MW * DP_n
+MW_ODE_4 = ModelPars.MW * DP_w
+
 
 print(f'Mw_ODE_4 = {MW_ODE_4[-1]:.2f} [kg/mol]')
 print(f'PDI_ODE_4 = {MW_ODE_4[-1] / Mn_ODE[-1]:.2f}')
@@ -220,11 +247,173 @@ t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sum
 #* Post processing MC
 # Pack MC results for plotting
 MC_output = [t_out, Rates_out, R_out, D_out, G_out, Mn_out, Mw_out, suma_n_tot, RD_column_sums, G]
-plot_pars = [t, Mn_ODE, Mw_ODE, Mw_ODE_2, Mw_ODE_3, MW_ODE_4]
+plot_pars = [t, Mn_ODE, Mw_ODE, Mw_ODE_2, Mw_ODE_3, MW_ODE_4, MN_ODE_4]
 
 # Plotting
 plot = plot_MC_results(MC_output, plot_pars)
 
+
+def diagnostics_branching(
+    la0, la1, la2, mu0, mu1, mu2, ga0, ga1, ga2,
+    D0_composition, t, t_out, Mn_out, Mw_out, ModelPars
+):
+    """
+    Diagnostics for deterministic vs Monte Carlo branching consistency.
+    Prints checks for:
+        1. Indexing of D0_composition
+        2. Functionality distribution integrity
+        3. Branch-level mass balance
+        4. Molecular-level mass balance
+        5. Correct molecule count per volume
+        6. ODE vs MC Mn, Mw alignment
+    """
+
+    print("\n==============================")
+    print(" BRANCHING DIAGNOSTICS REPORT")
+    print("==============================\n")
+
+    eps = 1e-30
+
+    # =======================================================
+    # 1) Functionality indexing and distribution
+    # -------------------------------------------------------
+    f = np.arange(1, len(D0_composition) + 1)  # +1 because index 0 = f=1
+    p_raw = np.array(D0_composition, dtype=float)
+    p_sum = p_raw.sum()
+
+    print("1) INDEXING CHECK")
+    print("------------------")
+    print(f"Functionality values f      = {f}")
+    print(f"User D0_composition (raw)   = {p_raw}")
+    print(f"Sum p_raw                   = {p_sum:.6f}")
+
+    if not np.isclose(p_sum, 1.0, atol=1e-8):
+        print("!! WARNING: D0_composition does not sum to 1. Normalizing...")
+    p = p_raw / (p_sum + eps)
+
+    f_avg = np.sum(p * f)
+    E_ff1 = np.sum(p * f * (f - 1))
+
+    print(f"Normalized p                = {p}")
+    print(f"Average functionality f_avg = {f_avg:.6f}")
+    print(f"E[f(f-1)]                   = {E_ff1:.6f}")
+    print()
+
+    if f_avg <= 0:
+        raise ValueError("ERROR: Average functionality is zero or negative. Check D0_composition.")
+
+    # =======================================================
+    # 2) Branch-level quantities
+    # -------------------------------------------------------
+    print("2) BRANCH-LEVEL CHECKS")
+    print("------------------------")
+    N_att = la0 + mu0
+    S1_att = la1 + mu1
+    S2_att = la2 + mu2
+
+    print(f"Total attached branches at end = {N_att[-1]:.6e}")
+
+    # =======================================================
+    # 3) Mass balance for monomer units in chains
+    # -------------------------------------------------------
+    print("\n3) BRANCH MASS BALANCE")
+    print("------------------------")
+    branch_mass = la1 + mu1 + ga1  # total monomer units in all chains
+    # should match initial monomers consumed (up to numerical error)
+    # can't check directly without M0, so check consistency only:
+    print("Max(la1+mu1+ga1 - S1_att - S1_g) == 0?")
+
+    diff_branch_mass = np.max(np.abs((la1 + mu1 + ga1) - (S1_att + ga1)))
+    print(f"Max difference = {diff_branch_mass:.6e}  (should be near 0)")
+    print()
+
+    # =======================================================
+    # 4) TERMINATED CHAIN CHECK (should be linear)
+    # -------------------------------------------------------
+    print("4) TERMINATED CHAIN CHECK")
+    print("--------------------------")
+    # If all ga molecules are linear, per-molecule DP = S1_g / ga0
+    ga_dp = np.where(ga0 > 0, ga1 / (ga0 + eps), 0)
+
+    print(f"Final average DP of terminated chains = {ga_dp[-1]:.4f}")
+    print("If this is NOT linear DP, your MC model may generate multi-arm ga.")
+    print()
+
+    # =======================================================
+    # 5) Molecular counts — attached and total
+    # -------------------------------------------------------
+    print("5) MOLECULAR COUNT CHECKS")
+    print("---------------------------")
+
+    N_mol_att = N_att / f_avg
+    N_mol_total = N_mol_att + ga0
+
+    print(f"Final attached molecules       = {N_mol_att[-1]:.6e}")
+    print(f"Final terminated molecules     = {ga0[-1]:.6e}")
+    print(f"Final TOTAL molecules (ODE)    = {N_mol_total[-1]:.6e}")
+    print()
+
+    # =======================================================
+    # 6) MOLECULAR MASS BALANCE CHECK (critical)
+    # -------------------------------------------------------
+    print("6) MOLECULAR MASS CONSISTENCY")
+    print("-------------------------------")
+
+    # Compute molecular moments exactly
+    N_att_safe = np.where(N_att > 0, N_att, eps)
+    m1_att = S1_att / N_att_safe
+    m2_att = S2_att / N_att_safe
+
+    # attached molecule first and second moments
+    mu1_mol_att = f_avg * m1_att
+    mu2_mol_att = f_avg * m2_att + E_ff1 * (m1_att ** 2)
+
+    S1_mol_total = N_mol_att * mu1_mol_att + ga1
+    S2_mol_total = N_mol_att * mu2_mol_att + ga2
+
+    diff_S1 = np.max(np.abs(S1_mol_total - (la1 + mu1 + ga1)))
+    diff_S2 = np.max(np.abs(S2_mol_total - (la2 + mu2 + ga2)))
+
+    print(f"Max |S1_mol_total - chain S1| = {diff_S1:.6e}  (must be near 0)")
+    print(f"Max |S2_mol_total - chain S2| = {diff_S2:.6e}  (must be near 0)")
+    print()
+
+    # =======================================================
+    # 7) ODE vs MC COMPARISON
+    # -------------------------------------------------------
+    print("7) ODE vs MC COMPARISON")
+    print("-------------------------")
+
+    # align times
+    closest_idx = [np.argmin(np.abs(t_out - τ)) for τ in t]
+    Mn_mc_aligned = Mn_out[closest_idx]
+    Mw_mc_aligned = Mw_out[closest_idx]
+
+    Mn_mc_safe = np.where(Mn_mc_aligned > 0, Mn_mc_aligned, eps)
+    Mw_mc_safe = np.where(Mw_mc_aligned > 0, Mw_mc_aligned, eps)
+
+    # compute deterministic exact Mn and Mw
+    DP_n = S1_mol_total / (N_mol_total + eps)
+    DP_w = S2_mol_total / (S1_mol_total + eps)
+
+    Mn_ode = ModelPars.MW * DP_n
+    Mw_ode = ModelPars.MW * DP_w
+
+    ratio_Mn = Mn_ode / Mn_mc_safe
+    ratio_Mw = Mw_ode / Mw_mc_safe
+
+    print(f"Final Mn_ODE / Mn_MC = {ratio_Mn[-1]:.4f}")
+    print(f"Final Mw_ODE / Mw_MC = {ratio_Mw[-1]:.4f}")
+    print("\nIf Mw matches but Mn does not -> molecule counts are wrong.\n")
+    print("If Mn matches but Mw does not -> second moment calculation wrong.\n")
+    print("If neither matches -> functionality distribution or MC chemistry differs.\n")
+
+    print("Diagnostics complete.\n")
+
+diagnostics_branching(
+    la0, la1, la2, mu0, mu1, mu2, ga0, ga1, ga2,
+    D0_composition, t, t_out, Mn_out, Mw_out, ModelPars
+)
 
 
 
