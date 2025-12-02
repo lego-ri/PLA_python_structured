@@ -34,7 +34,7 @@ D0_composition = np.zeros(max_branches)
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
 # good to test are [0.2, 0, 0.8], [0.2, 0.2, 0.6]
-D0_composition[0]      = 0#                               # Fraction of chains (branches) in linear cocatalysts
+D0_composition[0]      = 0#0.2#                               # Fraction of chains (branches) in linear cocatalysts
 D0_composition[1]      = 0#0.2                               # Fraction of chains in cocatalysts with 2 branches
 # D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
 #TODO#######################################################################################################################
