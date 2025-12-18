@@ -10,9 +10,8 @@
 
 import numpy as np # Python numerical library
 
-#TODO: pro rozsireny zmenit momenty
 
-def model_eqs(t, y, pars, D0_composition, max_branches):
+def model_eqs(t, y, pars):
     #* Unpack State variables
     M = y[0]        # Monomer concentration, mol/m3
     C = y[1]        # Catalyst concentration, mol/m3

@@ -33,22 +33,22 @@ max_branches = 3                                             # Number of branche
 D0_composition = np.zeros(max_branches)                      
 #TODO#######################################################################################################################
 #TODO: Define the initial composition of cocatalysts:
-# good to test are [0.2, 0, 0.8], [0.2, 0.2, 0.6]
-D0_composition[0]      = 0#0.2#                               # Fraction of chains (branches) in linear cocatalysts
-D0_composition[1]      = 0#0.2                               # Fraction of chains in cocatalysts with 2 branches
-# D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of chains in cocatalysts with 2 branches
+# good to test are [0.4, 0.2, 0.4], [0.2, 0, 0.8]
+D0_composition[0]      = 0.25#0.2#                               # Fraction of primary alcohol cocatalysts
+D0_composition[1]      = 0.65#0.2                               # Fraction of secondary alcohol cocatalysts
+# D0_composition[2]      = 0.4#0.33#0.33                               # Fraction of tertiary alcohol cocatalysts
 #TODO#######################################################################################################################
 #***********************************************************************************************************
-D0_composition[-1]      = 1 - np.sum(D0_composition[:-1])     # Fraction of chains in cocatalysts with max_branches branches
+D0_composition[-1]      = 1 - np.sum(D0_composition[:-1])     # Fraction of max_branches alcohol cocatalysts
 print(f"User input D0_composition is: {D0_composition}")
 
 # Check the user input composition
 if max_branches != len(D0_composition):
-    print('Error: The number of branches does not match the length of the D0_composition array!!!')
+    print('Error: The defined max_branched co-catalyst number of branches does not match the length of the co-catalyst composition D0_composition array!!!')
     exit()  
 
 if D0_composition[-1] < 0: 
-    print('Error: The initial composition does not sum up to 1!!!')
+    print('Error: The initial composition of co-catalysts does not sum up to 1!!!')
     exit()  
     
 if not np.isclose(np.sum(D0_composition), 1.0, atol=1e-8):
@@ -90,7 +90,7 @@ t_span = [tbeg, tend]  # time interval for the ODE integration
 @measure_time
 def solve_ode_system():
     # Use solve_ivp to solve the ODE system
-    solution = solve_ivp(lambda t, y: model_eqs(t, y, ModelPars, D0_composition, max_branches), t_span, y0, method='BDF') 
+    solution = solve_ivp(lambda t, y: model_eqs(t, y, ModelPars), t_span, y0, method='BDF') 
     # For a stiff problem, implicit methods might be better than the used RK23 like BDF or Radau?
     return solution
 
@@ -134,7 +134,7 @@ Mw_ODE_1 = ModelPars.MW * (ga2 + (mu2 + la2) * avg_bran_in_macromol) / (la1 + mu
 #!---------------------------------------------------------
 
 #*************************************************************************************************************
-Mn_ODE, Mw_ODE = deterministic_post_proces(y,D0_composition,'chain',small_number)
+Mn_ODE, Mw_ODE = deterministic_post_proces(y,D0_composition,'molecule',small_number)
 
 # Print final conversion, Mw, and PDI
 print(f'Mw_ODE = {Mw_ODE[-1]:.2f} [kg/mol]')
@@ -157,7 +157,7 @@ D_conc = mu0[-1]    # concentration of dormant chains
 #* Check if the model can be run with this initial composition and find the corresponding Nx
 # Define the parameters for the optimal Nx search
 min_Nx = 500                         # Minimal Nx
-max_Nx = 6000                        # Maximal Nx    
+max_Nx = 60000                        # Maximal Nx    
 max_difference_RD_dec_round = 1e-2   # Maximal difference between rounded and non-rounded number of D,R
 eps_fraction = 1e-3                  # Margin for finding close fractions to the defined inlet composition
 

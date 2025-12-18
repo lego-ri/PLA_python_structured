@@ -19,7 +19,8 @@ def deterministic_post_proces(
     
     #* Unpack input
     small_number = eps
-    p_raw = np.array(D0_composition, dtype=float)
+    # p_raw = np.array(D0_composition, dtype=float)
+    p_raw = D0_composition
     
     # Assign the State variables 
     M = y[0]     # Monomer concentration, mol/m3
