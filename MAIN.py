@@ -19,6 +19,9 @@ from build_matrixes_forMC import build_matrixes_forMC
 from monte_carlo_algorithm import monte_carlo_algorithm
 from plot_MC_results import plot_MC_results
 from deterministic_post_proces import deterministic_post_proces
+from D0_compositions import get_process_viable_Nx
+from D0_compositions  import find_Nx_match
+from D0_compositions  import map_all_compositions
 import numpy as np
 
 total_time = process_time()      # Start the timer to measure the total run time of the file
@@ -74,6 +77,7 @@ mu20 = small_number    # Dormant chains 2nd moment
 ga00 = small_number    # Terminated chains 0th moment (concentration)
 ga10 = small_number    # Terminated chains 1st moment
 ga20 = small_number    # Terminated chains 2nd moment
+
 
 # Pack initial conditions 
 y0 = [M0, C0, A0, la00, la10, la20, mu00, mu10, mu20, ga00, ga10, ga20]
@@ -152,21 +156,48 @@ print("Monte Carlo model:")
 # thus can be assumed constant from the beggining throughout the MC simulation.
 R_conc = la0[-1]    # concentration of active chains
 D_conc = mu0[-1]    # concentration of dormant chains
-
     
 #* Check if the model can be run with this initial composition and find the corresponding Nx
 # Define the parameters for the optimal Nx search
 min_Nx = 500                         # Minimal Nx
-max_Nx = 60000                        # Maximal Nx    
+max_Nx = 6000                        # Maximal Nx    
 max_difference_RD_dec_round = 1e-2   # Maximal difference between rounded and non-rounded number of D,R
 eps_fraction = 1e-3                  # Margin for finding close fractions to the defined inlet composition
+
+# Validate that min_Nx and max_Nx are (near) integers
+if not isinstance(min_Nx, int) or not isinstance(max_Nx, int):
+    raise ValueError("min_Nx and max_Nx must be integer values")
+
 
 # Pack pars for Nx search
 Nx_pars = [min_Nx, max_Nx, max_difference_RD_dec_round, eps_fraction, max_branches] 
 process_pars = [D_conc, R_conc, ga0, t]
 
+#TODO::::::::::::::::::::::::::::::::::::::::::::::::::;
 # Find the optimal Nx
+#! old below
 D0_composition, Nx, D_round, R_round = find_Nx(D0_composition, Nx_pars, process_pars)
+#! old above
+# Get the list of Nx values that satisfy R/D equilibrium
+viable_Nx_array = get_process_viable_Nx(Nx_pars, process_pars)
+print(f"Found {len(viable_Nx_array)} viable Nx values.\n")
+
+# --- Find Match for Specific Composition (User Request) ---
+matched_Nx = find_Nx_match(D0_composition, viable_Nx_array)
+if matched_Nx:
+    print(f"SUCCESS: Composition {D0_composition} is valid with Nx = {matched_Nx}\n")
+else:
+    print(f"FAILURE: Composition {D0_composition} not found in current Nx range.\n")
+
+# We pass the already calculated viable_Nx_array into this function
+full_dictionary = map_all_compositions(viable_Nx_array, max_branches=3)
+
+print(f"Generated map for {len(full_dictionary)} Nx values.")
+# Example print of first found
+first_key = list(full_dictionary.keys())[0]
+print(f"Example: Nx={first_key} supports {len(full_dictionary[first_key])} compositions, 1st one is: {full_dictionary[first_key][0]})")
+
+#TODO:::::::::::::::::::::::::::::::::::::::::::::::::
 
 # Build matrixes for D and R chains for the MC simulation
 D, R, G, total_num_D_mol = build_matrixes_forMC(D0_composition, Nx, R_round, max_branches)

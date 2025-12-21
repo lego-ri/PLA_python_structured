@@ -49,6 +49,7 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
     Nx_viable = np.array([])        # Define an array for viable Nx values
     D_round_viable = np.array([])   # Define an array for number of dormant chains for each viable Nx 
     R_round_viable = np.array([])   # Define an array for number of active chains for each viable Nx
+    num_macromol = np.zeros(max_branches)
 
     # Iterate over Nx from a defined interval to find the viable Nx values
     for Nx in range(min_Nx, max_Nx + 1):
@@ -78,14 +79,13 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
     # Iterate over the viable Nxs
     for i in range(len(Nx_viable)):
         valid = True
-        number_of_macromol = (Nx-1)/(np.sum(D0_composition[k]*(k+1) for k in range(max_branches)))
-
+        tot_number_of_macromol = (Nx_viable[i]-1)/(np.sum(D0_composition[k]*(k+1) for k in range(max_branches)))
+        if not (abs(tot_number_of_macromol -  np.round(tot_number_of_macromol)) < 1e-4):  # tolerance for floating-point error
+            continue
         # Iterate over the fractions in the initial composition
         for j in range(len(D0_composition)):
-            # check if the number of branches belonging to an x-brancehd molecule type is divisible by x
-# Check if number_of_macromol * D0_composition[j] is close to an integer multiple of (j + 1)
-            remainder = (number_of_macromol * D0_composition[j]) % (j + 1)
-            if not np.isclose(remainder, 0, atol=1e-8):  # tolerance for floating-point error
+            num_macromol[j] = D0_composition[j]*tot_number_of_macromol
+            if not (abs(num_macromol[j] -  np.round(num_macromol[j])) < 1e-4):  # tolerance for floating-point error
                 valid = False
                 break            
         # If a valid Nx is found, break the loop and save the data for future use    
@@ -96,9 +96,15 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
             print("Original composition is valid with Nx:", Nx)
             print(f"D_round is: {D_round}, R_round is: {R_round}, G is set to 1")
             print("Composition:", D0_composition)
+            print(f"tot_number_of_macromol = {tot_number_of_macromol}")
+            for j in range(max_branches):
+                print(f"Num_{j}_branched = {num_macromol[j]}")
             found_initial_Nx = True
             break
 
+    #################################################################################################################
+    #################################################################################################################
+    
     #* If the initial composition cannot be modelled, find the closest modellable compositions 
     if not found_initial_Nx: 
         print("User input D0_composition cannot be modelled with available Nx, searching for a close match...")

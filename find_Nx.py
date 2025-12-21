@@ -102,6 +102,9 @@ def find_Nx(D0_composition, Nx_pars, process_pars):
             found_initial_Nx = True
             break
 
+    #################################################################################################################
+    #################################################################################################################
+    
     #* If the initial composition cannot be modelled, find the closest modellable compositions 
     if not found_initial_Nx: 
         print("User input D0_composition cannot be modelled with available Nx, searching for a close match...")
